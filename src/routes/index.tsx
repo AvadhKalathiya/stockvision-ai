@@ -28,7 +28,7 @@ function Index() {
           STOCKVISION<span className="text-accent"> AI</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/login" className="text-muted-foreground hover:text-foreground transition">
+          <Link to="/login" search={{ redirect: "/dashboard" }} className="text-muted-foreground hover:text-foreground transition">
             Sign in
           </Link>
           <Link
