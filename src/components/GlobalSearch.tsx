@@ -14,8 +14,8 @@ type Market = "ALL" | "INDIA" | "CRYPTO" | "GLOBAL";
 const MARKET_SET: Record<Market, ReadonlySet<string>> = {
   ALL: new Set(ALL_TICKERS),
   INDIA: new Set(INDIA_TICKERS),
-  CRYPTO: new Set(CRYPTO_TICKERS),
-  GLOBAL: new Set(GLOBAL_TICKERS),
+  CRYPTO: CRYPTO_TICKERS.length > 0 ? new Set(CRYPTO_TICKERS) : new Set<string>(),
+  GLOBAL: GLOBAL_TICKERS.length > 0 ? new Set(GLOBAL_TICKERS) : new Set(ALL_TICKERS),
 };
 
 export function GlobalSearch() {
@@ -56,34 +56,36 @@ export function GlobalSearch() {
   const pick = (t: string) => {
     setOpen(false);
     setQ("");
-    navigate({ to: "/forecast", search: { ticker: t } });
+    navigate({ to: "/forecast", search: { ticker: t, model: "Ensemble" } });
   };
 
   return (
     <div ref={ref} className="relative w-full max-w-xl">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-input border border-border focus-within:border-primary transition">
-        <Search className="size-4 text-muted-foreground" />
-        <input
-          value={q}
-          onFocus={() => setOpen(true)}
-          onChange={(e) => {
-            setQ(e.target.value);
-            setOpen(true);
-          }}
-          placeholder="Search stocks, crypto, indices…"
-          className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
-        />
-        {q && (
-          <button onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground">
-            <X className="size-4" />
-          </button>
-        )}
-        <div className="flex gap-1 ml-2">
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-input border border-border focus-within:border-primary transition flex-1 min-w-0">
+          <Search className="size-4 text-muted-foreground shrink-0" />
+          <input
+            value={q}
+            onFocus={() => setOpen(true)}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setOpen(true);
+            }}
+            placeholder="Search stocks & indices…"
+            className="flex-1 min-w-0 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
+          />
+          {q && (
+            <button onClick={() => setQ("")} className="text-muted-foreground hover:text-foreground shrink-0">
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
+        <div className="flex gap-1 flex-wrap sm:shrink-0">
           {(["ALL", "INDIA", "CRYPTO", "GLOBAL"] as Market[]).map((m) => (
             <button
               key={m}
               onClick={() => setMarket(m)}
-              className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider transition ${
+              className={`px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wider transition ${
                 market === m
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"

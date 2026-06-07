@@ -1,143 +1,176 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Rocket, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
-import { formatPrice } from "@/lib/tickerConfig";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Rocket, TrendingUp, CheckCircle2, RefreshCw, Calendar } from "lucide-react";
+import { getIpoCalendar } from "@/lib/ipoFutures.functions";
+import { PageShell } from "@/components/PageShell";
+import { QueryError, QueryLoading, EmptyState } from "@/components/QueryState";
+import { useAuthStore } from "@/stores/authStore";
+import { getLimits } from "@/lib/planLimits";
+import { PlanGate } from "@/components/PlanGate";
 
-export const Route = createFileRoute("/_authenticated/ipo")({
-  component: IPOPage,
-});
+export const Route = createFileRoute("/_authenticated/ipo")({ component: IPOPage });
 
-const IPO_DATA = [
-  {
-    id: 1,
-    name: "Ola Electric Mobility",
-    status: "Upcoming",
-    issuePrice: 76,
-    gmp: 12,
-    gmpPct: 15.7,
-    openDate: "2026-08-02",
-    closeDate: "2026-08-06",
-    subStatus: "0.00x",
-  },
-  {
-    id: 2,
-    name: "FirstCry (Brainbees)",
-    status: "Open",
-    issuePrice: 465,
-    gmp: 40,
-    gmpPct: 8.6,
-    openDate: "2026-08-05",
-    closeDate: "2026-08-07",
-    subStatus: "2.34x",
-  },
-  {
-    id: 3,
-    name: "Unicommerce eSolutions",
-    status: "Closed",
-    issuePrice: 108,
-    gmp: 45,
-    gmpPct: 41.6,
-    openDate: "2026-08-06",
-    closeDate: "2026-08-08",
-    subStatus: "168.3x",
-  },
-  {
-    id: 4,
-    name: "Ather Energy",
-    status: "Upcoming",
-    issuePrice: 220,
-    gmp: 65,
-    gmpPct: 29.5,
-    openDate: "2026-09-12",
-    closeDate: "2026-09-15",
-    subStatus: "0.00x",
-  },
-];
+type Filter = "all" | "upcoming" | "open" | "closed" | "listed";
 
 function IPOPage() {
+  const profile = useAuthStore((s) => s.profile);
+  const limits = getLimits(profile?.plan);
+  const ipoFn = useServerFn(getIpoCalendar);
+  const [filter, setFilter] = useState<Filter>("all");
+
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+    queryKey: ["ipo-calendar-live"],
+    queryFn: () => ipoFn({ data: { market: "INDIA" } }),
+    staleTime: 5 * 60_000,
+    retry: 2,
+  });
+
+  const ipos = (data ?? []).filter((ipo) => filter === "all" || ipo.status === filter);
+  const today = new Date().toISOString().split("T")[0];
+  const listingToday = (data ?? []).filter((i) => i.listingDate?.startsWith(today));
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <header className="mb-6 flex justify-between items-end">
-        <div>
-          <h1 className="font-heading text-3xl font-bold text-glow-green">IPO Intelligence</h1>
-          <p className="text-muted-foreground mt-1">
-            Track upcoming Indian IPOs, Grey Market Premium (GMP), and subscription status.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full font-bold text-sm">
-          <Rocket className="size-4" /> NSE/BSE Mainboard
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="glass-card p-5 border-l-4 border-l-blue-500">
-          <div className="text-xs uppercase text-muted-foreground font-bold mb-1">Upcoming</div>
-          <div className="text-3xl font-bold font-mono-nums">2</div>
-        </div>
-        <div className="glass-card p-5 border-l-4 border-l-yellow-500">
-          <div className="text-xs uppercase text-muted-foreground font-bold mb-1">Open</div>
-          <div className="text-3xl font-bold font-mono-nums">1</div>
-        </div>
-        <div className="glass-card p-5 border-l-4 border-l-green-500">
-          <div className="text-xs uppercase text-muted-foreground font-bold mb-1">
-            High GMP (&gt;20%)
-          </div>
-          <div className="text-3xl font-bold font-mono-nums">2</div>
-        </div>
-        <div className="glass-card p-5 border-l-4 border-l-purple-500">
-          <div className="text-xs uppercase text-muted-foreground font-bold mb-1">
-            Avg Listing Gain
-          </div>
-          <div className="text-3xl font-bold font-mono-nums">+18.4%</div>
-        </div>
+    <PageShell
+      title="IPO Intelligence"
+      subtitle="Live NSE & BSE IPO calendar — upcoming, open, closed & listing analysis."
+      actions={
+        <button onClick={() => refetch()} disabled={isFetching} className="px-3 py-1.5 rounded-md bg-secondary text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50">
+          <RefreshCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} /> Refresh
+        </button>
+      }
+    >
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {(["all", "upcoming", "open", "closed", "listed"] as Filter[]).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold capitalize transition ${
+              filter === f ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {f === "all" ? "All" : f}
+          </button>
+        ))}
       </div>
 
-      <div className="glass-card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-secondary/50 text-muted-foreground text-left text-xs uppercase tracking-wider">
-            <tr>
-              <th className="p-4">Company Name</th>
-              <th className="p-4">Status</th>
-              <th className="p-4">Dates</th>
-              <th className="p-4 text-right">Issue Price</th>
-              <th className="p-4 text-right">GMP (Expected)</th>
-              <th className="p-4 text-right">Subscription</th>
-            </tr>
-          </thead>
-          <tbody>
-            {IPO_DATA.map((ipo) => (
-              <tr key={ipo.id} className="border-t border-border hover:bg-secondary/30 transition">
-                <td className="p-4 font-bold">{ipo.name}</td>
-                <td className="p-4">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-bold ${
-                      ipo.status === "Open"
-                        ? "bg-yellow-500/20 text-yellow-500"
-                        : ipo.status === "Closed"
-                          ? "bg-green-500/20 text-green-500"
-                          : "bg-blue-500/20 text-blue-500"
-                    }`}
-                  >
-                    {ipo.status}
-                  </span>
-                </td>
-                <td className="p-4 text-xs text-muted-foreground">
-                  {ipo.openDate} to {ipo.closeDate}
-                </td>
-                <td className="p-4 text-right font-mono-nums font-semibold">
-                  {formatPrice(ipo.issuePrice)}
-                </td>
-                <td className="p-4 text-right">
-                  <div className="font-mono-nums font-bold text-primary">
-                    +{formatPrice(ipo.gmp)}
-                  </div>
-                  <div className="text-xs text-primary/80">+{ipo.gmpPct}% Est. Gain</div>
-                </td>
-                <td className="p-4 text-right font-mono-nums font-bold">{ipo.subStatus}</td>
+      {listingToday.length > 0 && (
+        <div className="glass-card p-4 mb-4 border-l-4 border-l-primary flex items-center gap-3">
+          <Calendar className="size-5 text-primary shrink-0" />
+          <div>
+            <div className="font-bold text-sm">Listing Today</div>
+            <div className="text-sm text-muted-foreground">{listingToday.map((i) => i.name).join(", ")}</div>
+          </div>
+        </div>
+      )}
+
+      {isError ? (
+        <QueryError message={(error as Error)?.message} onRetry={() => refetch()} />
+      ) : isLoading ? (
+        <QueryLoading label="Fetching NSE/BSE IPO data…" />
+      ) : ipos.length === 0 ? (
+        <EmptyState title="No IPO data available" description="NSE/BSE feeds may be temporarily unavailable. Try refreshing." action={<button onClick={() => refetch()} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-semibold">Retry</button>} />
+      ) : (
+        <div className="glass-card page-table-wrap">
+          <table className="w-full min-w-[760px] text-sm">
+            <thead className="bg-secondary/50">
+              <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <th className="px-4 py-3">Company</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Exchange</th>
+                <th className="px-4 py-3 text-right">Price Band</th>
+                <th className="px-4 py-3 text-right">Issue Size</th>
+                {limits.canPremiumIPO ? <th className="px-4 py-3 text-right">Subscription</th> : null}
+                <th className="px-4 py-3">Dates</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {ipos.map((ipo, i) => (
+                <tr key={`${ipo.name}-${i}`} className="border-t border-border hover:bg-secondary/30">
+                  <td className="px-4 py-3">
+                    <div className="font-semibold">{ipo.name}</div>
+                    {ipo.symbol ? <div className="text-xs text-muted-foreground font-mono-nums">{ipo.symbol}</div> : null}
+                  </td>
+                  <td className="px-4 py-3"><StatusBadge status={ipo.status} /></td>
+                  <td className="px-4 py-3 text-xs">{ipo.exchange ?? "NSE/BSE"}</td>
+                  <td className="px-4 py-3 text-right font-mono-nums">{ipo.priceBand ?? "—"}</td>
+                  <td className="px-4 py-3 text-right text-xs">{ipo.issueSize ?? "—"}</td>
+                  {limits.canPremiumIPO ? (
+                    <td className="px-4 py-3 text-right font-mono-nums">{ipo.subscription ?? "—"}</td>
+                  ) : null}
+                  <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                    {ipo.openDate && ipo.closeDate ? `${ipo.openDate} → ${ipo.closeDate}` : ipo.listingDate ?? "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+        <Stat icon={Rocket} label="Upcoming" value={(data ?? []).filter((i) => i.status === "upcoming").length} />
+        <Stat icon={TrendingUp} label="Open" value={(data ?? []).filter((i) => i.status === "open").length} />
+        <Stat icon={CheckCircle2} label="Listed" value={(data ?? []).filter((i) => i.status === "listed").length} />
+        <Stat icon={Calendar} label="Today" value={listingToday.length} />
       </div>
+
+      {limits.canPremiumIPO ? (
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="glass-card p-5">
+            <h3 className="font-heading font-bold mb-3">GMP Dashboard</h3>
+            <div className="space-y-2 text-sm">
+              {(data ?? [])
+                .filter((i) => i.gmp != null)
+                .slice(0, 5)
+                .map((i) => (
+                  <div key={i.name} className="flex justify-between border-b border-border/50 pb-2">
+                    <span className="font-semibold truncate pr-2">{i.name}</span>
+                    <span className="font-mono-nums text-primary shrink-0">₹{i.gmp}</span>
+                  </div>
+                ))}
+              {(data ?? []).filter((i) => i.gmp != null).length === 0 && (
+                <p className="text-muted-foreground text-xs">No GMP data available from exchanges.</p>
+              )}
+            </div>
+          </div>
+          <div className="glass-card p-5">
+            <h3 className="font-heading font-bold mb-3">Listing Gain Analysis</h3>
+            <p className="text-sm text-muted-foreground">
+              {(data ?? []).filter((i) => i.status === "listed").length} recent listings tracked.
+              Monitor subscription oversubscription for listing-day pop signals.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6">
+          <PlanGate
+            compact
+            requiredPlan="pro_plus"
+            title="Premium IPO Intelligence (GMP, Subscription & Listing Analysis)"
+          />
+        </div>
+      )}
+    </PageShell>
+  );
+}
+
+function Stat({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number }) {
+  return (
+    <div className="metric-card p-4 text-center">
+      <Icon className="size-5 mx-auto text-primary mb-2" />
+      <div className="text-2xl font-bold font-mono-nums">{value}</div>
+      <div className="text-xs text-muted-foreground uppercase">{label}</div>
     </div>
   );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles =
+    status === "open" ? "bg-primary/20 text-primary"
+    : status === "upcoming" ? "bg-accent/20 text-accent"
+    : status === "listed" ? "bg-primary/10 text-primary"
+    : "bg-muted text-muted-foreground";
+  return <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${styles}`}>{status}</span>;
 }

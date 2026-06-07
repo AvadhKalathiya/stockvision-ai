@@ -1,77 +1,72 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { verifyRequestAuth } from "@/integrations/supabase/verify-auth";
+import { aiChatStream, aiNotConfiguredMessage } from "@/lib/aiProvider";
 
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.LOVABLE_API_KEY;
-        if (!apiKey) {
-          return new Response(JSON.stringify({ error: "LOVABLE_API_KEY missing" }), {
-            status: 500,
+        const auth = await verifyRequestAuth(request);
+        if (!auth) {
+          return new Response(JSON.stringify({ error: "Unauthorized. Please sign in." }), {
+            status: 401,
             headers: { "Content-Type": "application/json" },
           });
         }
-        let body: { messages?: { role: string; content: string }[]; ticker?: string } = {};
+
+        let body: {
+          messages?: { role: string; content: string }[];
+          ticker?: string;
+          context?: string;
+        } = {};
         try {
           body = await request.json();
         } catch {
-          /* ignore */
+          return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
         }
-        const messages = Array.isArray(body.messages) ? body.messages.slice(-20) : [];
+
+        const messages = Array.isArray(body.messages)
+          ? body.messages.filter((m) => m?.role && m?.content).slice(-20)
+          : [];
+
+        if (messages.length === 0) {
+          return new Response(JSON.stringify({ error: "At least one message is required" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
 
         const system = {
-          role: "system",
+          role: "system" as const,
           content:
-            `You are StockVision AI, an expert assistant for Indian and global equity & crypto markets. ` +
-            `Use markdown. Be concise, structured, and end every answer with a one-line SEBI disclaimer. ` +
-            `Currently selected ticker: ${body.ticker ?? "none"}.`,
+            `You are StockVision AI — expert on Indian equity markets (NSE/BSE), NIFTY, sectors, IPOs, and portfolios.\n` +
+            `Use markdown. Be concise and actionable. End with a one-line SEBI disclaimer.\n` +
+            `${body.context ? `Live context:\n${body.context}\n` : ""}` +
+            `Selected ticker: ${body.ticker ?? "none"}.`,
         };
 
-        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [system, ...messages],
-            stream: true,
-          }),
-        });
-
-        if (upstream.status === 429) {
-          return new Response(
-            JSON.stringify({ error: "Rate limit reached. Please wait and try again." }),
-            {
-              status: 429,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
+        try {
+          const { body: stream, contentType } = await aiChatStream([
+            system,
+            ...messages.map((m) => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            })),
+          ]);
+          return new Response(stream, {
+            headers: { "Content-Type": contentType, "Cache-Control": "no-cache" },
+          });
+        } catch (err) {
+          const msg = (err as Error).message;
+          const status = msg.includes("not configured") ? 503 : msg.includes("Rate limit") ? 429 : 500;
+          return new Response(JSON.stringify({ error: msg || aiNotConfiguredMessage() }), {
+            status,
+            headers: { "Content-Type": "application/json" },
+          });
         }
-        if (upstream.status === 402) {
-          return new Response(
-            JSON.stringify({ error: "AI credits exhausted. Add funds in Workspace settings." }),
-            {
-              status: 402,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
-        if (!upstream.ok || !upstream.body) {
-          const t = await upstream.text().catch(() => "");
-          return new Response(
-            JSON.stringify({ error: `AI gateway error ${upstream.status}: ${t.slice(0, 200)}` }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            },
-          );
-        }
-
-        return new Response(upstream.body, {
-          headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" },
-        });
       },
     },
   },

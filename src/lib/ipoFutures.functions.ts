@@ -4,15 +4,18 @@ import { z } from "zod";
 export type IpoItem = {
   name: string;
   symbol?: string;
-  market: "INDIA" | "GLOBAL";
-  status: "upcoming" | "open" | "listed";
+  market: "INDIA";
+  status: "upcoming" | "open" | "closed" | "listed";
   openDate?: string;
   closeDate?: string;
   listingDate?: string;
   priceBand?: string;
   issueSize?: string;
+  issuePrice?: number;
+  subscription?: string;
+  gmp?: number;
   exchange?: string;
-  source: "firecrawl" | "fallback";
+  source: "nse" | "bse" | "exchange";
 };
 
 export type FutureContract = {
@@ -28,44 +31,25 @@ const YF_BASE = "https://query1.finance.yahoo.com/v8/finance/chart";
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
-/* ---------------- Futures (Yahoo Finance) ---------------- */
-
 const FUTURES_UNIVERSE: { symbol: string; name: string; category: FutureContract["category"] }[] = [
-  // Index futures
   { symbol: "ES=F", name: "S&P 500 E-mini", category: "INDEX" },
   { symbol: "NQ=F", name: "Nasdaq 100 E-mini", category: "INDEX" },
   { symbol: "YM=F", name: "Dow E-mini", category: "INDEX" },
-  { symbol: "RTY=F", name: "Russell 2000 E-mini", category: "INDEX" },
-  { symbol: "NKD=F", name: "Nikkei 225", category: "INDEX" },
-  // Commodity
   { symbol: "GC=F", name: "Gold", category: "COMMODITY" },
-  { symbol: "SI=F", name: "Silver", category: "COMMODITY" },
   { symbol: "CL=F", name: "Crude Oil WTI", category: "COMMODITY" },
-  { symbol: "BZ=F", name: "Brent Crude", category: "COMMODITY" },
-  { symbol: "NG=F", name: "Natural Gas", category: "COMMODITY" },
-  { symbol: "HG=F", name: "Copper", category: "COMMODITY" },
-  // Currency
-  { symbol: "6E=F", name: "Euro FX", category: "CURRENCY" },
-  { symbol: "6J=F", name: "Japanese Yen", category: "CURRENCY" },
-  { symbol: "DX=F", name: "US Dollar Index", category: "CURRENCY" },
-  // Crypto
   { symbol: "BTC=F", name: "Bitcoin Futures", category: "CRYPTO" },
-  { symbol: "ETH=F", name: "Ether Futures", category: "CRYPTO" },
 ];
 
 export const getFutures = createServerFn({ method: "GET" }).handler(
   async (): Promise<FutureContract[]> => {
-    const out = await Promise.all(
+    return Promise.all(
       FUTURES_UNIVERSE.map(async (f) => {
         try {
-          const res = await fetch(
-            `${YF_BASE}/${encodeURIComponent(f.symbol)}?interval=1d&range=5d`,
-            {
-              headers: { "User-Agent": UA, Accept: "application/json" },
-            },
-          );
+          const res = await fetch(`${YF_BASE}/${encodeURIComponent(f.symbol)}?interval=1d&range=5d`, {
+            headers: { "User-Agent": UA, Accept: "application/json" },
+          });
           if (!res.ok) throw new Error(String(res.status));
-          const json = (await res.json()) as any;
+          const json = (await res.json()) as { chart?: { result?: { meta?: Record<string, number> }[] } };
           const meta = json?.chart?.result?.[0]?.meta ?? {};
           const last = Number(meta.regularMarketPrice ?? 0);
           const prev = Number(meta.chartPreviousClose ?? meta.previousClose ?? last);
@@ -74,122 +58,125 @@ export const getFutures = createServerFn({ method: "GET" }).handler(
             name: f.name,
             last,
             changePct: prev ? ((last - prev) / prev) * 100 : 0,
-            currency: meta.currency ?? "USD",
-            category: f.category,
-          } satisfies FutureContract;
-        } catch (e) {
-          console.error("future failed", f.symbol, e);
-          return {
-            symbol: f.symbol,
-            name: f.name,
-            last: 0,
-            changePct: 0,
             currency: "USD",
             category: f.category,
           };
+        } catch {
+          return { symbol: f.symbol, name: f.name, last: 0, changePct: 0, currency: "USD", category: f.category };
         }
       }),
     );
-    return out;
   },
 );
 
-/* ---------------- IPO Calendar (Firecrawl) ---------------- */
-
-const IPO_SOURCES = {
-  INDIA: "https://www.chittorgarh.com/report/mainboard-ipo-list-in-india-bse-nse/83/",
-  GLOBAL: "https://www.nasdaq.com/market-activity/ipos",
-};
-
-async function firecrawlScrape(url: string): Promise<string> {
-  const apiKey = process.env.FIRECRAWL_API_KEY;
-  if (!apiKey) throw new Error("FIRECRAWL_API_KEY not configured");
-  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true }),
+async function nseFetch(path: string): Promise<unknown> {
+  const base = "https://www.nseindia.com";
+  const init = await fetch(base, {
+    headers: { "User-Agent": UA, Accept: "text/html", "Accept-Language": "en-US,en;q=0.9" },
   });
-  if (!res.ok) throw new Error(`Firecrawl ${res.status}`);
-  const json = (await res.json()) as any;
-  return json?.data?.markdown ?? json?.markdown ?? "";
+  const cookie = init.headers.get("set-cookie") ?? "";
+  const res = await fetch(`${base}${path}`, {
+    headers: {
+      "User-Agent": UA,
+      Accept: "application/json",
+      Referer: `${base}/market-data/all-upcoming-issues-ipo`,
+      "Accept-Language": "en-US,en;q=0.9",
+      Cookie: cookie,
+    },
+  });
+  if (!res.ok) throw new Error(`NSE ${res.status}`);
+  return res.json();
 }
 
-function parseIndiaIpoMarkdown(md: string): IpoItem[] {
-  // Chittorgarh tables: rows like | Issuer | Open | Close | Listing | Price | Size |
-  const lines = md.split("\n").filter((l) => l.trim().startsWith("|"));
-  const items: IpoItem[] = [];
-  for (const line of lines) {
-    const cells = line
-      .split("|")
-      .map((c) => c.trim())
-      .filter(Boolean);
-    if (cells.length < 4) continue;
-    if (/issuer|company/i.test(cells[0]) && /open/i.test(cells[1] ?? "")) continue;
-    if (/^[-:\s]+$/.test(cells[0])) continue;
-    const name = cells[0].replace(/\[|\]\(.+?\)/g, "").trim();
-    if (!name || name.length > 120) continue;
-    items.push({
-      name,
-      market: "INDIA",
-      status: /upcoming/i.test(md) ? "upcoming" : "open",
-      openDate: cells[1],
-      closeDate: cells[2],
-      listingDate: cells[3],
-      priceBand: cells[4],
-      issueSize: cells[5],
-      exchange: "NSE/BSE",
-      source: "firecrawl",
-    });
-    if (items.length >= 25) break;
-  }
-  return items;
+function mapNseStatus(s: string): IpoItem["status"] {
+  const u = (s ?? "").toLowerCase();
+  if (u.includes("open") || u.includes("current")) return "open";
+  if (u.includes("list") || u.includes("listed")) return "listed";
+  if (u.includes("close") || u.includes("past")) return "closed";
+  return "upcoming";
 }
 
-function parseGlobalIpoMarkdown(md: string): IpoItem[] {
-  const lines = md.split("\n").filter((l) => l.trim().startsWith("|"));
-  const items: IpoItem[] = [];
-  for (const line of lines) {
-    const cells = line
-      .split("|")
-      .map((c) => c.trim())
-      .filter(Boolean);
-    if (cells.length < 3) continue;
-    if (/symbol|company/i.test(cells[0])) continue;
-    if (/^[-:\s]+$/.test(cells[0])) continue;
-    const symbol = cells[0].replace(/\[|\]\(.+?\)/g, "").trim();
-    const name = cells[1] ?? symbol;
-    if (!symbol || symbol.length > 20) continue;
-    items.push({
+function parseNseIpos(data: unknown): IpoItem[] {
+  const rows = Array.isArray(data) ? data : (data as { data?: unknown[] })?.data ?? [];
+  return rows.slice(0, 40).map((row: Record<string, unknown>) => {
+    const name = String(row.companyName ?? row.issuerName ?? row.symbol ?? "—");
+    const issueSize = String(row.issueSize ?? row.issueSizeInRs ?? row.issueSizeRs ?? "—");
+    const priceBand = String(row.priceBand ?? row.issuePrice ?? row.floorPrice ?? "—");
+    const openDate = String(row.issueOpenDate ?? row.openDate ?? row.bidOpenDate ?? "");
+    const closeDate = String(row.issueCloseDate ?? row.closeDate ?? row.bidCloseDate ?? "");
+    const listingDate = String(row.listingDate ?? row.listDate ?? "");
+    const sub = row.subscription ?? row.subscriptionTimes ?? row.totalSubscription;
+    return {
       name,
-      symbol,
-      market: "GLOBAL",
-      status: "upcoming",
-      listingDate: cells[2],
-      priceBand: cells[3],
-      issueSize: cells[4],
-      exchange: "NASDAQ",
-      source: "firecrawl",
-    });
-    if (items.length >= 25) break;
-  }
-  return items;
+      symbol: String(row.symbol ?? ""),
+      market: "INDIA" as const,
+      status: mapNseStatus(String(row.issueStatus ?? row.status ?? row.issuerType ?? "")),
+      openDate: openDate || undefined,
+      closeDate: closeDate || undefined,
+      listingDate: listingDate || undefined,
+      priceBand,
+      issueSize,
+      subscription: sub != null ? String(sub) : undefined,
+      exchange: "NSE",
+      source: "nse" as const,
+    };
+  });
+}
+
+async function fetchBseIpos(): Promise<IpoItem[]> {
+  const url = "https://api.bseindia.com/BseIndiaAPI/api/IPOIssueInfo/w?strType=IPO";
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA, Accept: "application/json", Referer: "https://www.bseindia.com/" },
+  });
+  if (!res.ok) throw new Error(`BSE ${res.status}`);
+  const json = (await res.json()) as { Table?: Record<string, unknown>[] };
+  const rows = json?.Table ?? [];
+  return rows.slice(0, 30).map((row) => ({
+    name: String(row.CompanyName ?? row.companyName ?? "—"),
+    symbol: String(row.Symbol ?? row.symbol ?? ""),
+    market: "INDIA" as const,
+    status: mapNseStatus(String(row.IssueStatus ?? row.Status ?? "")),
+    openDate: String(row.OpenDate ?? row.IssueOpenDate ?? "") || undefined,
+    closeDate: String(row.CloseDate ?? row.IssueCloseDate ?? "") || undefined,
+    listingDate: String(row.ListingDate ?? "") || undefined,
+    priceBand: String(row.PriceBand ?? row.IssuePrice ?? "—"),
+    issueSize: String(row.IssueSize ?? "—"),
+    subscription: row.Subscription != null ? String(row.Subscription) : undefined,
+    exchange: "BSE",
+    source: "bse" as const,
+  }));
 }
 
 export const getIpoCalendar = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ market: z.enum(["INDIA", "GLOBAL", "ALL"]).default("ALL") }).parse)
-  .handler(async ({ data }): Promise<IpoItem[]> => {
-    const targets: ("INDIA" | "GLOBAL")[] =
-      data.market === "ALL" ? ["INDIA", "GLOBAL"] : [data.market];
-    const results = await Promise.all(
-      targets.map(async (m) => {
-        try {
-          const md = await firecrawlScrape(IPO_SOURCES[m]);
-          return m === "INDIA" ? parseIndiaIpoMarkdown(md) : parseGlobalIpoMarkdown(md);
-        } catch (err) {
-          console.error(`IPO scrape ${m} failed:`, err);
-          return [] as IpoItem[];
-        }
-      }),
-    );
-    return results.flat();
+  .inputValidator(z.object({ market: z.enum(["INDIA", "GLOBAL", "ALL"]).default("INDIA") }).parse)
+  .handler(async (): Promise<IpoItem[]> => {
+    const results: IpoItem[] = [];
+    const endpoints = [
+      "/api/ipo-current-issue",
+      "/api/all-upcoming-issues?issuerType=Forthcoming",
+      "/api/all-upcoming-issues?issuerType=Open",
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const data = await nseFetch(ep);
+        results.push(...parseNseIpos(data));
+      } catch (err) {
+        console.error(`NSE IPO ${ep}:`, err);
+      }
+    }
+
+    try {
+      results.push(...(await fetchBseIpos()));
+    } catch (err) {
+      console.error("BSE IPO:", err);
+    }
+
+    const seen = new Set<string>();
+    return results.filter((item) => {
+      const key = `${item.name}-${item.openDate}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return item.name && item.name !== "—";
+    });
   });

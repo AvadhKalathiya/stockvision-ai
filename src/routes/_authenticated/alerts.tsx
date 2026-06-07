@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -11,10 +9,12 @@ import {
   formatChangePct,
   getTickerConfig,
 } from "@/lib/tickerConfig";
-import { getLiveQuotes } from "@/lib/yahooFinance.functions";
-import { Bell, Trash2, Plus, Volume2, VolumeX } from "lucide-react";
+import { Trash2, Plus, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
+import { PageShell } from "@/components/PageShell";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { getLimits } from "@/lib/planLimits";
+import { PlanGate } from "@/components/PlanGate";
 
 export const Route = createFileRoute("/_authenticated/alerts")({ component: AlertsPage });
 
@@ -31,6 +31,7 @@ interface Alert {
 function AlertsPage() {
   const user = useAuthStore((s) => s.user);
   const profile = useAuthStore((s) => s.profile);
+  const limits = getLimits(profile?.plan);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [ticker, setTicker] = useState<string>("RELIANCE.NS");
   const [target, setTarget] = useState("");
@@ -39,29 +40,16 @@ function AlertsPage() {
   const [soundOn, setSoundOn] = useState(true);
   const triggeredRef = useRef<Set<string>>(new Set());
 
-  const limits = getLimits(profile?.plan ?? "free");
-  const canCreate = limits.canSetAlerts;
-
-  const fetchQuotes = useServerFn(getLiveQuotes);
-  const uniqTickers = useMemo(() => Array.from(new Set(alerts.map((a) => a.ticker))), [alerts]);
-
-  const quotesQuery = useQuery({
-    queryKey: ["alert-quotes", uniqTickers],
-    queryFn: () => fetchQuotes({ data: { tickers: uniqTickers } }),
-    enabled: uniqTickers.length > 0,
-    refetchInterval: 30_000,
-    staleTime: 15_000,
-  });
-
+  const { quoteMap, isFetching: quotesFetching } = useLiveQuotes();
   const priceMap = useMemo(() => {
     const m = new Map<string, number>();
-    quotesQuery.data?.forEach((q) => m.set(q.ticker, q.last));
+    quoteMap.forEach((q, t) => m.set(t, q.last));
     return m;
-  }, [quotesQuery.data]);
+  }, [quoteMap]);
 
   // Trigger detection with browser notification + sound
   useEffect(() => {
-    if (!quotesQuery.data) return;
+    if (priceMap.size === 0 && alerts.length === 0) return;
     alerts.forEach((a) => {
       if (!a.is_active) return;
       const price = priceMap.get(a.ticker);
@@ -95,7 +83,7 @@ function AlertsPage() {
         }
       }
     });
-  }, [quotesQuery.data, alerts, priceMap, soundOn]);
+  }, [alerts, priceMap, soundOn]);
 
   const load = async () => {
     if (!user) return;
@@ -123,8 +111,12 @@ function AlertsPage() {
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!canCreate) {
-      toast.error("Upgrade to Pro to set price alerts");
+    if (limits.alertsMax === 0) {
+      toast.error("Price alerts require Student plan or higher");
+      return;
+    }
+    if (limits.alertsMax !== Infinity && alerts.length >= limits.alertsMax) {
+      toast.error(`Alert limit (${limits.alertsMax}) reached. Upgrade to Pro for unlimited.`);
       return;
     }
     const price = Number(target);
@@ -167,15 +159,12 @@ function AlertsPage() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
-      <header className="mb-6 flex items-center gap-3 flex-wrap">
-        <Bell className="size-6 text-primary" />
-        <div className="flex-1">
-          <h1 className="font-heading text-3xl font-bold text-glow-green">Price Alerts</h1>
-          <p className="text-muted-foreground text-sm">
-            Live price polling every 30s · {quotesQuery.isFetching ? "updating…" : "idle"}
-          </p>
-        </div>
+    <PageShell
+      title="Price Alerts"
+      subtitle={`Live monitoring · ${quotesFetching ? "updating…" : "active"}`}
+      className="max-w-6xl"
+      actions={
+        <>
         <button
           onClick={() => setSoundOn((s) => !s)}
           className="px-3 py-1.5 rounded-md bg-secondary text-foreground text-xs font-semibold flex items-center gap-1.5"
@@ -187,19 +176,15 @@ function AlertsPage() {
           onClick={requestBrowserNotifications}
           className="px-3 py-1.5 rounded-md bg-secondary text-foreground text-xs font-semibold"
         >
-          Enable browser notifications
+          Notifications
         </button>
-      </header>
-
-      {!canCreate && (
-        <div className="glass-card p-4 mb-4 border-accent/30">
-          <p className="text-sm text-accent">
-            Price alerts are a Pro feature. Upgrade your plan in Settings.
-          </p>
-        </div>
-      )}
-
-      <form onSubmit={add} className="glass-card p-5 mb-6 grid grid-cols-1 md:grid-cols-5 gap-3">
+        </>
+      }
+    >
+      {limits.alertsMax === 0 ? (
+        <PlanGate requiredPlan="student" title="Price Alerts" description="Set target prices and get notified when stocks cross your levels. Available on Student plan and above." />
+      ) : (
+      <form onSubmit={add} className="glass-card p-4 sm:p-5 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <select
           value={ticker}
           onChange={(e) => setTicker(e.target.value)}
@@ -229,15 +214,21 @@ function AlertsPage() {
         />
         <button
           type="submit"
-          disabled={!canCreate}
-          className="px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+          className="px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2"
         >
           <Plus className="size-4" /> Add
         </button>
       </form>
+      )}
 
-      <div className="glass-card overflow-hidden">
-        <table className="w-full">
+      {limits.alertsMax > 0 && (
+      <p className="text-xs text-muted-foreground mb-3">
+        {limits.alertsMax === Infinity ? "Unlimited alerts" : `${alerts.length}/${limits.alertsMax} alerts used`}
+      </p>
+      )}
+
+      <div className="glass-card page-table-wrap">
+        <table className="w-full min-w-[640px]">
           <thead className="bg-secondary/50">
             <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
               <th className="px-4 py-3">Ticker</th>
@@ -315,6 +306,6 @@ function AlertsPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </PageShell>
   );
 }

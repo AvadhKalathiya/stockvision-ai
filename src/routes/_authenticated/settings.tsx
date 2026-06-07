@@ -10,33 +10,14 @@ import {
   Download,
   AlertTriangle,
   Lock,
+  Crown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PLAN_LIMITS } from "@/lib/planLimits";
+import { PLAN_LIMITS, PLAN_ORDER, normalizePlan, type Plan } from "@/lib/planLimits";
 import { downloadCSV } from "@/lib/csv";
+import { PageShell } from "@/components/PageShell";
 
 export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage });
-
-const PLANS = [
-  {
-    id: "free",
-    name: "Free",
-    price: "₹0",
-    features: ["5 forecasts/day", "SARIMA only", "Basic watchlist"],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "₹499",
-    features: ["Unlimited forecasts", "All 4 models", "Price alerts", "AI screener", "PDF export"],
-  },
-  {
-    id: "student",
-    name: "Student",
-    price: "₹199",
-    features: ["Unlimited forecasts", "All 4 models", "Price alerts", "PDF export"],
-  },
-];
 
 function SettingsPage() {
   const navigate = useNavigate();
@@ -62,6 +43,8 @@ function SettingsPage() {
   const [pw2, setPw2] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const currentPlan = normalizePlan(profile?.plan);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -98,11 +81,7 @@ function SettingsPage() {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({
-        name,
-        default_currency: currency,
-        trading_style: style,
-      })
+      .update({ name, default_currency: currency, trading_style: style })
       .eq("id", user.id);
     setSaving(false);
     if (error) toast.error(error.message);
@@ -112,25 +91,23 @@ function SettingsPage() {
     }
   };
 
-  const switchPlan = async (planId: string) => {
+  const switchPlan = async (planId: Plan) => {
     if (!user) return;
+    if (planId === "enterprise") {
+      toast.info("Contact sales@stockvision.ai for Enterprise pricing");
+      return;
+    }
     const { error } = await supabase.from("profiles").update({ plan: planId }).eq("id", user.id);
     if (error) toast.error(error.message);
     else {
-      toast.success(`Switched to ${planId.toUpperCase()} plan`);
+      toast.success(`Switched to ${PLAN_LIMITS[planId].name}`);
       refreshProfile();
     }
   };
 
   const changePassword = async () => {
-    if (pw1.length < 6) {
-      toast.error("Password must be 6+ characters");
-      return;
-    }
-    if (pw1 !== pw2) {
-      toast.error("Passwords do not match");
-      return;
-    }
+    if (pw1.length < 6) return toast.error("Password must be 6+ characters");
+    if (pw1 !== pw2) return toast.error("Passwords do not match");
     const { error } = await supabase.auth.updateUser({ password: pw1 });
     if (error) toast.error(error.message);
     else {
@@ -142,6 +119,11 @@ function SettingsPage() {
 
   const exportAllData = async () => {
     if (!user) return;
+    const limits = PLAN_LIMITS[currentPlan];
+    if (!limits.canExportPDF && !limits.canPremiumExport) {
+      toast.error("PDF/CSV export requires Student plan or higher");
+      return;
+    }
     const [wl, pf, al, fh] = await Promise.all([
       supabase.from("watchlist").select("*").eq("user_id", user.id),
       supabase.from("portfolio").select("*").eq("user_id", user.id),
@@ -149,15 +131,12 @@ function SettingsPage() {
       supabase.from("forecast_history").select("*").eq("user_id", user.id),
     ]);
     const all = [
-      ...(wl.data ?? []).map((r: any) => ({ table: "watchlist", ...r })),
-      ...(pf.data ?? []).map((r: any) => ({ table: "portfolio", ...r })),
-      ...(al.data ?? []).map((r: any) => ({ table: "price_alerts", ...r })),
-      ...(fh.data ?? []).map((r: any) => ({ table: "forecast_history", ...r })),
+      ...(wl.data ?? []).map((r: Record<string, unknown>) => ({ table: "watchlist", ...r })),
+      ...(pf.data ?? []).map((r: Record<string, unknown>) => ({ table: "portfolio", ...r })),
+      ...(al.data ?? []).map((r: Record<string, unknown>) => ({ table: "price_alerts", ...r })),
+      ...(fh.data ?? []).map((r: Record<string, unknown>) => ({ table: "forecast_history", ...r })),
     ];
-    if (!all.length) {
-      toast.info("No data to export");
-      return;
-    }
+    if (!all.length) return toast.info("No data to export");
     downloadCSV(`stockvision-export-${Date.now()}.csv`, all);
     toast.success(`Exported ${all.length} rows`);
   };
@@ -165,7 +144,6 @@ function SettingsPage() {
   const deleteAccount = async () => {
     if (!user) return;
     setDeleting(true);
-    // Delete user data (RLS scopes to current user)
     await Promise.all([
       supabase.from("watchlist").delete().eq("user_id", user.id),
       supabase.from("portfolio").delete().eq("user_id", user.id),
@@ -175,255 +153,159 @@ function SettingsPage() {
     await supabase.auth.signOut();
     setDeleting(false);
     toast.success("Account data deleted and signed out");
-    navigate({ to: "/login" });
+    navigate({ to: "/login", search: { redirect: "/dashboard" } });
   };
 
-  const currentPlan = profile?.plan ?? "free";
-
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <header className="mb-6 flex items-center gap-3">
-        <SettingsIcon className="size-6 text-primary" />
-        <div>
-          <h1 className="font-heading text-3xl font-bold text-glow-green">Settings</h1>
-          <p className="text-muted-foreground text-sm">
-            Manage your profile and subscription plan.
-          </p>
-        </div>
-      </header>
-
-      <section className="glass-card p-6 mb-8">
+    <PageShell title="Settings" subtitle="Manage profile, appearance, and subscription.">
+      <section className="glass-card p-4 sm:p-6 mb-6">
         <h2 className="font-heading text-lg mb-4">Profile</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-xs uppercase tracking-wider text-muted-foreground">Email</label>
-            <input
-              value={user?.email ?? ""}
-              disabled
-              className="w-full mt-2 px-3 py-2 rounded-md bg-secondary border border-border text-muted-foreground"
-            />
+            <input value={user?.email ?? ""} disabled className="w-full mt-2 px-3 py-2 rounded-md bg-secondary border border-border text-muted-foreground text-sm" />
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">
-              Display name
-            </label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full mt-2 px-3 py-2 rounded-md bg-input border border-border"
-            />
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Display name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="w-full mt-2 px-3 py-2 rounded-md bg-input border border-border text-sm" />
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">
-              Default currency
-            </label>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full mt-2 px-3 py-2 rounded-md bg-input border border-border"
-            >
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Default currency</label>
+            <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full mt-2 px-3 py-2 rounded-md bg-input border border-border text-sm">
               <option value="INR">INR (₹)</option>
               <option value="USD">USD ($)</option>
             </select>
           </div>
           <div>
-            <label className="text-xs uppercase tracking-wider text-muted-foreground">
-              Trading style
-            </label>
-            <select
-              value={style}
-              onChange={(e) => setStyle(e.target.value)}
-              className="w-full mt-2 px-3 py-2 rounded-md bg-input border border-border"
-            >
+            <label className="text-xs uppercase tracking-wider text-muted-foreground">Trading style</label>
+            <select value={style} onChange={(e) => setStyle(e.target.value)} className="w-full mt-2 px-3 py-2 rounded-md bg-input border border-border text-sm">
               <option value="conservative">Conservative</option>
               <option value="moderate">Moderate</option>
               <option value="aggressive">Aggressive</option>
             </select>
           </div>
         </div>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="mt-5 px-5 py-2 rounded-md bg-primary text-primary-foreground font-semibold disabled:opacity-50"
-        >
+        <button onClick={save} disabled={saving} className="mt-5 px-5 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50">
           {saving ? "Saving…" : "Save profile"}
         </button>
       </section>
 
-      {/* Appearance + notifications */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="glass-card p-6">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="glass-card p-4 sm:p-6">
           <h2 className="font-heading text-lg mb-4">Appearance</h2>
           <div className="flex gap-2">
-            <button
-              onClick={() => setTheme("dark")}
-              className={`flex-1 px-3 py-2 rounded-md font-semibold flex items-center justify-center gap-2 ${theme === "dark" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
-            >
+            <button onClick={() => setTheme("dark")} className={`flex-1 px-3 py-2 rounded-md font-semibold text-sm flex items-center justify-center gap-2 ${theme === "dark" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
               <Moon className="size-4" /> Dark
             </button>
-            <button
-              onClick={() => setTheme("light")}
-              className={`flex-1 px-3 py-2 rounded-md font-semibold flex items-center justify-center gap-2 ${theme === "light" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
-            >
+            <button onClick={() => setTheme("light")} className={`flex-1 px-3 py-2 rounded-md font-semibold text-sm flex items-center justify-center gap-2 ${theme === "light" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
               <Sun className="size-4" /> Light
             </button>
           </div>
         </div>
-
-        <div className="glass-card p-6">
+        <div className="glass-card p-4 sm:p-6">
           <h2 className="font-heading text-lg mb-4">Notifications</h2>
-          <label className="flex items-center justify-between py-2 cursor-pointer">
-            <span className="text-sm">Email alerts</span>
-            <input
-              type="checkbox"
-              checked={notifEmail}
-              onChange={(e) => setNotifEmail(e.target.checked)}
-              className="accent-primary size-4"
-            />
+          <label className="flex items-center justify-between py-2 cursor-pointer text-sm">
+            <span>Email alerts</span>
+            <input type="checkbox" checked={notifEmail} onChange={(e) => setNotifEmail(e.target.checked)} className="accent-primary size-4" />
           </label>
-          <label className="flex items-center justify-between py-2 cursor-pointer">
-            <span className="text-sm">In-app price alert toasts</span>
-            <input
-              type="checkbox"
-              checked={notifAlerts}
-              onChange={(e) => setNotifAlerts(e.target.checked)}
-              className="accent-primary size-4"
-            />
+          <label className="flex items-center justify-between py-2 cursor-pointer text-sm">
+            <span>In-app price alert toasts</span>
+            <input type="checkbox" checked={notifAlerts} onChange={(e) => setNotifAlerts(e.target.checked)} className="accent-primary size-4" />
           </label>
         </div>
       </section>
 
-      {/* Security */}
-      <section className="glass-card p-6 mb-8">
-        <h2 className="font-heading text-lg mb-4 flex items-center gap-2">
-          <Lock className="size-4" /> Security
-        </h2>
+      <section className="glass-card p-4 sm:p-6 mb-6">
+        <h2 className="font-heading text-lg mb-4 flex items-center gap-2"><Lock className="size-4" /> Security</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="password"
-            placeholder="New password"
-            value={pw1}
-            onChange={(e) => setPw1(e.target.value)}
-            className="px-3 py-2 rounded-md bg-input border border-border"
-          />
-          <input
-            type="password"
-            placeholder="Confirm new password"
-            value={pw2}
-            onChange={(e) => setPw2(e.target.value)}
-            className="px-3 py-2 rounded-md bg-input border border-border"
-          />
+          <input type="password" placeholder="New password" value={pw1} onChange={(e) => setPw1(e.target.value)} className="px-3 py-2 rounded-md bg-input border border-border text-sm" />
+          <input type="password" placeholder="Confirm new password" value={pw2} onChange={(e) => setPw2(e.target.value)} className="px-3 py-2 rounded-md bg-input border border-border text-sm" />
         </div>
-        <button
-          onClick={changePassword}
-          className="mt-4 px-5 py-2 rounded-md bg-primary text-primary-foreground font-semibold"
-        >
-          Change password
-        </button>
+        <button onClick={changePassword} className="mt-4 px-5 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm">Change password</button>
       </section>
 
-      {/* Data export */}
-      <section className="glass-card p-6 mb-8 flex items-center justify-between flex-wrap gap-3">
+      <section className="glass-card p-4 sm:p-6 mb-8 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="font-heading text-lg">Export your data</h2>
-          <p className="text-sm text-muted-foreground">
-            Download all your watchlist, portfolio, alerts and forecast history as CSV.
-          </p>
+          <p className="text-sm text-muted-foreground">Student+ plans · CSV export of all holdings.</p>
         </div>
-        <button
-          onClick={exportAllData}
-          className="px-4 py-2 rounded-md bg-secondary text-foreground font-semibold flex items-center gap-2"
-        >
+        <button onClick={exportAllData} className="px-4 py-2 rounded-md bg-secondary text-foreground font-semibold flex items-center gap-2 text-sm">
           <Download className="size-4" /> Download CSV
         </button>
       </section>
 
       <section>
-        <h2 className="font-heading text-lg mb-4">Subscription</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {PLANS.map((p) => {
-            const active = currentPlan === p.id;
-            const limit = PLAN_LIMITS[p.id as keyof typeof PLAN_LIMITS];
+        <div className="flex items-center gap-2 mb-4">
+          <Crown className="size-5 text-primary" />
+          <h2 className="font-heading text-lg">Subscription Plans</h2>
+          <span className="ml-auto text-xs px-2 py-1 rounded-full bg-primary/15 text-primary font-bold uppercase">
+            Current: {PLAN_LIMITS[currentPlan].name}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {PLAN_ORDER.map((planId) => {
+            const p = PLAN_LIMITS[planId];
+            const active = currentPlan === planId;
+            const isEnterprise = planId === "enterprise";
             return (
-              <div
-                key={p.id}
-                className={`glass-card p-6 ${active ? "border-primary/60 ring-1 ring-primary/40" : ""}`}
-              >
-                <div className="flex items-baseline justify-between mb-2">
-                  <h3 className="font-heading text-xl font-bold">{p.name}</h3>
-                  <span className="text-2xl font-bold text-primary">
-                    {p.price}
-                    <span className="text-xs text-muted-foreground">/mo</span>
+              <div key={planId} className={`glass-card p-5 flex flex-col ${active ? "border-primary/60 ring-1 ring-primary/40" : ""} ${planId === "pro_plus" ? "border-accent/30" : ""}`}>
+                <div className="flex items-baseline justify-between mb-1">
+                  <h3 className="font-heading text-lg font-bold">{p.name}</h3>
+                  <span className="text-xl font-bold text-primary">
+                    {p.price}<span className="text-xs text-muted-foreground font-normal">{p.priceSub}</span>
                   </span>
                 </div>
-                <ul className="space-y-2 text-sm mb-5 mt-4">
-                  {p.features.map((f) => (
+                <p className="text-xs text-muted-foreground mb-3">Best for: {p.tagline}</p>
+                <ul className="space-y-1.5 text-xs mb-4 flex-1">
+                  {p.features.slice(0, 8).map((f) => (
                     <li key={f} className="flex gap-2">
-                      <Check className="size-4 text-primary" />
-                      {f}
+                      <Check className="size-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>{f}</span>
                     </li>
                   ))}
+                  {p.features.length > 8 && (
+                    <li className="text-muted-foreground pl-5">+{p.features.length - 8} more</li>
+                  )}
                 </ul>
-                <div className="text-xs text-muted-foreground mb-4">
-                  Models: {limit.models.join(", ")}
+                <div className="text-[10px] text-muted-foreground mb-3 border-t border-border pt-2">
+                  Chat: {p.chatMessagesPerDay === Infinity ? "∞" : p.chatMessagesPerDay}/day ·
+                  Forecasts: {p.forecastsPerDay === Infinity ? "∞" : p.forecastsPerDay}/day ·
+                  Watchlist: {p.watchlistMax === Infinity ? "∞" : p.watchlistMax} ·
+                  Alerts: {p.alertsMax === Infinity ? "∞" : p.alertsMax}
                 </div>
                 <button
-                  onClick={() => switchPlan(p.id)}
+                  onClick={() => switchPlan(planId)}
                   disabled={active}
-                  className={`w-full px-4 py-2 rounded-md font-semibold transition ${
-                    active
-                      ? "bg-secondary text-muted-foreground cursor-default"
-                      : "bg-primary text-primary-foreground hover:bg-primary/90"
+                  className={`w-full px-4 py-2 rounded-md font-semibold text-sm transition ${
+                    active ? "bg-secondary text-muted-foreground cursor-default" : isEnterprise ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
                   }`}
                 >
-                  {active ? "Current plan" : `Switch to ${p.name}`}
+                  {active ? "Current plan" : isEnterprise ? "Contact Sales" : `Switch to ${p.name}`}
                 </button>
               </div>
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground mt-4 text-center">
-          Demo billing — plans switch instantly without payment in this build.
-        </p>
+        <p className="text-xs text-muted-foreground mt-4 text-center">Demo billing — plans switch instantly without payment in this build.</p>
       </section>
 
-      {/* Danger zone */}
-      <section className="glass-card p-6 mt-8 border-destructive/40">
+      <section className="glass-card p-4 sm:p-6 mt-8 border-destructive/40">
         <h2 className="font-heading text-lg mb-2 text-destructive flex items-center gap-2">
           <AlertTriangle className="size-4" /> Danger zone
         </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Deleting your account permanently removes all of your watchlist, portfolio, alerts and
-          forecast history.
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">Permanently removes all watchlist, portfolio, alerts and forecast history.</p>
         {!deleteConfirm ? (
-          <button
-            onClick={() => setDeleteConfirm(true)}
-            className="px-4 py-2 rounded-md bg-destructive/15 text-destructive font-semibold"
-          >
-            Delete account…
-          </button>
+          <button onClick={() => setDeleteConfirm(true)} className="px-4 py-2 rounded-md bg-destructive/15 text-destructive font-semibold text-sm">Delete account…</button>
         ) : (
           <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm text-destructive font-semibold">
-              Are you sure? This cannot be undone.
-            </span>
-            <button
-              onClick={deleteAccount}
-              disabled={deleting}
-              className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground font-semibold disabled:opacity-50"
-            >
+            <span className="text-sm text-destructive font-semibold">Are you sure?</span>
+            <button onClick={deleteAccount} disabled={deleting} className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground font-semibold text-sm disabled:opacity-50">
               {deleting ? "Deleting…" : "Yes, delete everything"}
             </button>
-            <button
-              onClick={() => setDeleteConfirm(false)}
-              className="px-4 py-2 rounded-md bg-secondary"
-            >
-              Cancel
-            </button>
+            <button onClick={() => setDeleteConfirm(false)} className="px-4 py-2 rounded-md bg-secondary text-sm">Cancel</button>
           </div>
         )}
       </section>
-    </div>
+    </PageShell>
   );
 }

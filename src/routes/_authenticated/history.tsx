@@ -9,6 +9,9 @@ import { toast } from "sonner";
 import { formatPrice, formatChangePct, getTickerConfig } from "@/lib/tickerConfig";
 import { getLiveQuotes } from "@/lib/yahooFinance.functions";
 import { downloadCSV } from "@/lib/csv";
+import { getLimits } from "@/lib/planLimits";
+import { PlanGate } from "@/components/PlanGate";
+import { PageShell } from "@/components/PageShell";
 
 export const Route = createFileRoute("/_authenticated/history")({ component: HistoryPage });
 
@@ -24,6 +27,20 @@ interface Item {
 
 function HistoryPage() {
   const user = useAuthStore((s) => s.user);
+  const profile = useAuthStore((s) => s.profile);
+  const limits = getLimits(profile?.plan);
+
+  if (!limits.canForecastHistory) {
+    return (
+      <PageShell title="Forecast History" subtitle="Track past predictions and model accuracy over time.">
+        <PlanGate
+          requiredPlan="pro"
+          title="Historical Forecast Tracking"
+          description="Review past forecasts, accuracy metrics, and export history. Available on Pro plan and above."
+        />
+      </PageShell>
+    );
+  }
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");

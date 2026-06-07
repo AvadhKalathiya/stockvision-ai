@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthStore } from "@/stores/authStore";
 import {
   ALL_TICKERS,
   TICKER_CONFIG,
@@ -16,6 +15,8 @@ import { Sparkline } from "@/components/Sparkline";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { Star, Plus, Trash2, Briefcase, TrendingUp, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { getLimits } from "@/lib/planLimits";
+import { useAuthStore } from "@/stores/authStore";
 
 export const Route = createFileRoute("/_authenticated/watchlist")({
   component: WatchlistPage,
@@ -30,6 +31,8 @@ type SortMode = "movers" | "volume" | "high52";
 
 function WatchlistPage() {
   const user = useAuthStore((s) => s.user);
+  const profile = useAuthStore((s) => s.profile);
+  const limits = getLimits(profile?.plan);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState("TCS.NS");
@@ -91,6 +94,10 @@ function WatchlistPage() {
 
   const handleAdd = async () => {
     if (!user) return;
+    if (limits.watchlistMax !== Infinity && items.length >= limits.watchlistMax) {
+      toast.error(`Watchlist limit (${limits.watchlistMax}) reached. Upgrade for more.`);
+      return;
+    }
     if (items.some((i) => i.ticker === selected)) {
       toast.info("Already in watchlist");
       return;
@@ -209,11 +216,10 @@ function WatchlistPage() {
             <button
               key={s.id}
               onClick={() => setSortMode(s.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
-                sortMode === s.id
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${sortMode === s.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               {s.label}
             </button>

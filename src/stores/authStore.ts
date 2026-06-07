@@ -38,15 +38,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ profile: null });
       }
     });
-    supabase.auth.getSession().then(({ data }) => {
-      set({
-        session: data.session,
-        user: data.session?.user ?? null,
-        loading: false,
-        initialized: true,
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        set({
+          session: data.session,
+          user: data.session?.user ?? null,
+          loading: false,
+          initialized: true,
+        });
+        if (data.session?.user) get().refreshProfile();
+      })
+      .catch((err) => {
+        console.error("[AuthStore] getSession failed:", err);
+        set({ loading: false, initialized: true });
       });
-      if (data.session?.user) get().refreshProfile();
-    });
     return () => sub.subscription.unsubscribe();
   },
 
@@ -58,7 +64,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       .select("id,name,email,plan,avatar_url")
       .eq("id", user.id)
       .maybeSingle();
-    if (data) set({ profile: data as Profile });
+    if (data) {
+      set({ profile: data as Profile });
+    } else {
+      // New user — DB trigger may not have fired yet; upsert a default profile
+      console.log("[AuthStore] No profile found — creating default profile for", user.id);
+      const defaultProfile = {
+        id: user.id,
+        name: user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? null,
+        email: user.email ?? null,
+        plan: "free",
+        avatar_url: user.user_metadata?.avatar_url ?? null,
+      };
+      const { error } = await supabase.from("profiles").upsert(defaultProfile, { onConflict: "id" });
+      if (!error) {
+        set({ profile: defaultProfile as Profile });
+      } else {
+        console.error("[AuthStore] Failed to create default profile:", error.message);
+        // Still set a local-only profile so UI doesn't crash
+        set({ profile: defaultProfile as Profile });
+      }
+    }
   },
 
   signOut: async () => {

@@ -27,7 +27,8 @@ import { toast } from "sonner";
 import { Radio, Bell, Check, X, Loader2 } from "lucide-react";
 import { computeRSI, computeMACD, lastFinite, rsiVerdict, macdVerdict } from "@/lib/indicators";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { getLimits } from "@/lib/planLimits";
+import { getLimits, canUseModel } from "@/lib/planLimits";
+import { bumpDailyUsage, getDailyUsage, FORECAST_USAGE_KEY } from "@/lib/planUsage";
 
 export const Route = createFileRoute("/_authenticated/forecast")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -40,11 +41,8 @@ export const Route = createFileRoute("/_authenticated/forecast")({
 });
 
 const MODELS: ModelName[] = ["SARIMA", "Prophet", "LSTM", "Ensemble"];
-const RANGES = ["1mo", "3mo", "6mo", "1y", "2y", "5y"] as const;
+const RANGES = ["1y", "3y", "5y", "10y", "max"] as const;
 type Range = (typeof RANGES)[number];
-const rangeToDays = (r: Range) =>
-  (({ "1mo": 30, "3mo": 90, "6mo": 180, "1y": 365, "2y": 730, "5y": 1825 }) as const)[r];
-
 const TICKER_EXAMPLES = {
   "🇮🇳 NIFTY 50": ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS"],
   "🇮🇳 BANK NIFTY": ["SBIN.NS", "ICICIBANK.NS", "AXISBANK.NS", "KOTAKBANK.NS"],
@@ -79,7 +77,7 @@ function ForecastPage() {
   const [tickerInput, setTickerInput] = useState<string>(initialT);
   const [model, setModel] = useState<ModelName>(initialM);
   const [horizon, setHorizon] = useState(30);
-  const [range, setRange] = useState<Range>("6mo");
+  const [range, setRange] = useState<Range>("10y");
   const [useDateRange, setUseDateRange] = useState(false);
   const [startDate, setStartDate] = useState<string>(isoAddYears(-10));
   const [endDate, setEndDate] = useState<string>(todayISO());
@@ -88,8 +86,17 @@ function ForecastPage() {
   const user = useAuthStore((s) => s.user);
   const profile = useAuthStore((s) => s.profile);
   const limits = getLimits(profile?.plan ?? "free");
+  const forecastUsage = getDailyUsage(FORECAST_USAGE_KEY);
+  const forecastsLeft =
+    limits.forecastsPerDay === Infinity
+      ? Infinity
+      : Math.max(0, limits.forecastsPerDay - forecastUsage);
 
   const cfg = getTickerConfig(ticker);
+
+  useEffect(() => {
+    if (!canUseModel(profile?.plan ?? "free", model)) setModel("SARIMA");
+  }, [profile?.plan, model]);
 
   const fetchHistory = useServerFn(getLiveHistory);
   const fetchByDates = useServerFn(getHistoryByDateRange);
@@ -108,6 +115,7 @@ function ForecastPage() {
   const [validation, setValidation] = useState<{
     state: "idle" | "checking" | "ok" | "bad";
     name?: string;
+    message?: string;
   }>({ state: "idle" });
   useEffect(() => {
     const sym = tickerInput.trim().toUpperCase();
@@ -120,7 +128,7 @@ function ForecastPage() {
       try {
         const r = await validate({ data: { ticker: sym } });
         if (r.valid) setValidation({ state: "ok", name: r.name });
-        else setValidation({ state: "bad" });
+        else setValidation({ state: "bad", name: (r as { message?: string }).message });
       } catch {
         setValidation({ state: "bad" });
       }
@@ -128,16 +136,28 @@ function ForecastPage() {
     return () => clearTimeout(id);
   }, [tickerInput, validate]);
 
-  const applyTicker = (t: string) => {
+  const applyTicker = async (t: string) => {
     const sym = t.trim().toUpperCase();
     if (!sym) {
       toast.error("Please enter a ticker symbol.");
       return;
     }
-    setTicker(sym);
-    setTickerInput(sym);
-    saveRecent(sym);
-    setRecents(loadRecents());
+    try {
+      const r = await validate({ data: { ticker: sym } });
+      if (!r.valid) {
+        toast.error((r as { message?: string }).message ?? `Symbol ${sym} not found`);
+        setValidation({ state: "bad", message: (r as { message?: string }).message });
+        return;
+      }
+      const resolved = r.symbol;
+      setTicker(resolved);
+      setTickerInput(resolved);
+      setValidation({ state: "ok", name: r.name });
+      saveRecent(resolved);
+      setRecents(loadRecents());
+    } catch {
+      toast.error("Could not validate symbol. Try TCS or TCS.NS");
+    }
   };
 
   const result = useMemo(() => {
@@ -183,6 +203,15 @@ function ForecastPage() {
 
   const handleSave = async () => {
     if (!user) return;
+    if (forecastsLeft !== Infinity && forecastsLeft <= 0) {
+      toast.error(`Daily forecast limit (${limits.forecastsPerDay}) reached. Upgrade to Student for unlimited.`);
+      return;
+    }
+    if (!canUseModel(profile?.plan ?? "free", model)) {
+      toast.error(`${model} requires Student plan or higher.`);
+      return;
+    }
+    bumpDailyUsage(FORECAST_USAGE_KEY);
     setSaving(true);
     const { error } = await supabase.from("forecast_history").insert({
       user_id: user.id,
@@ -199,10 +228,6 @@ function ForecastPage() {
 
   const handleSetAlert = async () => {
     if (!user) return;
-    if (!limits.canSetAlerts) {
-      toast.error("Upgrade to Pro to set price alerts");
-      return;
-    }
     const condition = result.predictedPrice >= result.lastPrice ? "above" : "below";
     const { error } = await supabase.from("price_alerts").insert({
       user_id: user.id,
@@ -233,7 +258,12 @@ function ForecastPage() {
     <div className="p-8 max-w-7xl mx-auto">
       <header className="mb-6">
         <h1 className="font-heading text-3xl font-bold text-glow-green">AI Forecast Engine</h1>
-        <p className="text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+        <p className="text-muted-foreground mt-1 flex items-center gap-2 flex-wrap text-sm">
+          {forecastsLeft !== Infinity && (
+            <span className="text-xs px-2 py-0.5 rounded bg-secondary">
+              {forecastsLeft}/{limits.forecastsPerDay} forecasts left today
+            </span>
+          )}
           SARIMA · Prophet · LSTM · Ensemble — pick a model and horizon.
           <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-md bg-secondary">
             <Radio
@@ -279,8 +309,8 @@ function ForecastPage() {
               {validation.state === "ok" && validation.name
                 ? validation.name
                 : validation.state === "bad"
-                  ? "Symbol not found on Yahoo Finance"
-                  : ((TICKER_CONFIG as any)[ticker]?.name ?? ticker)}
+                  ? validation.message ?? "Symbol not found — try TCS or TCS.NS"
+                  : ((TICKER_CONFIG as Record<string, { name: string }>)[ticker]?.name ?? ticker)}
             </div>
             <button
               onClick={() => applyTicker(tickerInput)}
@@ -312,19 +342,26 @@ function ForecastPage() {
         <div className="glass-card p-4">
           <label className="text-xs uppercase tracking-wider text-muted-foreground">Model</label>
           <div className="flex gap-2 mt-2 flex-wrap">
-            {MODELS.map((m) => (
-              <button
-                key={m}
-                onClick={() => setModel(m)}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
-                  model === m
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
+            {MODELS.map((m) => {
+              const locked = !canUseModel(profile?.plan ?? "free", m);
+              return (
+                <button
+                  key={m}
+                  onClick={() => {
+                    if (locked) toast.error(`${m} requires Student plan or higher`);
+                    else setModel(m);
+                  }}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${model === m
+                      ? "bg-primary text-primary-foreground"
+                      : locked
+                        ? "bg-secondary/50 text-muted-foreground/50 line-through"
+                        : "bg-secondary text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  {m}{locked ? " 🔒" : ""}
+                </button>
+              );
+            })}
           </div>
         </div>
         <div className="glass-card p-4">
@@ -355,24 +392,14 @@ function ForecastPage() {
                   setUseDateRange(false);
                   setRange(r);
                 }}
-                className={`px-3 py-1 rounded-md text-xs font-semibold transition ${
-                  !useDateRange && range === r
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition ${!useDateRange && range === r
                     ? "bg-primary text-primary-foreground"
                     : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 {r.toUpperCase()}
               </button>
             ))}
-            <button
-              onClick={() => {
-                setUseDateRange(false);
-                setRange("5y");
-              }}
-              className="px-3 py-1 rounded-md text-xs font-semibold bg-secondary text-muted-foreground hover:text-foreground"
-            >
-              10Y
-            </button>
           </div>
           <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
             <input
@@ -385,32 +412,54 @@ function ForecastPage() {
           </label>
         </div>
         {useDateRange && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Start date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                max={endDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full mt-1 px-3 py-2 rounded-md bg-input border border-border text-foreground focus:outline-none focus:border-primary"
-              />
+          <div className="space-y-3">
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { label: "1Y", years: 1 },
+                { label: "3Y", years: 3 },
+                { label: "5Y", years: 5 },
+                { label: "10Y", years: 10 },
+              ].map(({ label, years }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => {
+                    setStartDate(isoAddYears(-years));
+                    setEndDate(todayISO());
+                  }}
+                  className="px-3 py-1 rounded-md text-xs font-semibold bg-secondary text-muted-foreground hover:text-foreground"
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                End date
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                min={startDate}
-                max={todayISO()}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full mt-1 px-3 py-2 rounded-md bg-input border border-border text-foreground focus:outline-none focus:border-primary"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Start date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  max={endDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-md bg-input border border-border text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">End date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  max={todayISO()}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 rounded-md bg-input border border-border text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
             </div>
+            {startDate >= endDate && (
+              <p className="text-xs text-destructive">End date must be after start date (min 30 days).</p>
+            )}
+            {live?.error && <p className="text-xs text-destructive">{live.error}</p>}
           </div>
         )}
         <div className="pt-1 border-t border-border/50">

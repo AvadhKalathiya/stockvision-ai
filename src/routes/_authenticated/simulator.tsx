@@ -2,9 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useSimulatorStore } from "@/stores/simulatorStore";
 import { ALL_TICKERS, TICKER_CONFIG, formatPrice, formatChangePct } from "@/lib/tickerConfig";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getLiveQuotes } from "@/lib/yahooFinance.functions";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { Wallet, TrendingUp, History, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/simulator")({
@@ -12,24 +10,23 @@ export const Route = createFileRoute("/_authenticated/simulator")({
 });
 
 function SimulatorPage() {
-  const { balance, trades, holdings, buy, sell, reset } = useSimulatorStore();
+  const balance = useSimulatorStore((s) => s.balance);
+  const trades = useSimulatorStore((s) => s.trades);
+  const holdings = useSimulatorStore((s) => s.holdings);
+  const buy = useSimulatorStore((s) => s.buy);
+  const sell = useSimulatorStore((s) => s.sell);
+  const reset = useSimulatorStore((s) => s.reset);
   const [tradeTicker, setTradeTicker] = useState(ALL_TICKERS[0]);
   const [tradeQty, setTradeQty] = useState(1);
   const [error, setError] = useState("");
 
-  const fetchQuotes = useServerFn(getLiveQuotes);
-  const { data: quotesData } = useQuery({
-    queryKey: ["simulator-quotes"],
-    queryFn: () => fetchQuotes({ data: { tickers: [...ALL_TICKERS] } }),
-    refetchInterval: 30_000,
-  });
+  const { quotes } = useLiveQuotes();
 
-  const activeQuote = quotesData?.find((q) => q.ticker === tradeTicker);
+  const activeQuote = quotes.find((q) => q.ticker === tradeTicker);
   const activePrice = activeQuote?.last ?? 0;
 
-  // Calculate Portfolio Value
   const holdingsValue = Object.entries(holdings).reduce((acc, [ticker, { qty }]) => {
-    const p = quotesData?.find((q) => q.ticker === ticker)?.last ?? 0;
+    const p = quotes.find((q) => q.ticker === ticker)?.last ?? 0;
     return acc + qty * p;
   }, 0);
   const totalValue = balance + holdingsValue;

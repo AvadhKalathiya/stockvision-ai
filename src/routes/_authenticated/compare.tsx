@@ -3,7 +3,8 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ALL_TICKERS, TICKER_CONFIG, formatChangePct, formatPrice } from "@/lib/tickerConfig";
-import { getLiveHistory, getLiveQuotes } from "@/lib/yahooFinance.functions";
+import { getLiveHistory } from "@/lib/yahooFinance.functions";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import {
   Line,
   XAxis,
@@ -15,24 +16,24 @@ import {
   Legend,
 } from "recharts";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { useAuthStore } from "@/stores/authStore";
+import { getLimits } from "@/lib/planLimits";
+import { PlanGate } from "@/components/PlanGate";
+import { PageShell } from "@/components/PageShell";
 
 export const Route = createFileRoute("/_authenticated/compare")({
   component: ComparePage,
 });
 
 function ComparePage() {
+  const profile = useAuthStore((s) => s.profile);
+  const limits = getLimits(profile?.plan);
   const [stockA, setStockA] = useState<string>("TCS.NS");
   const [stockB, setStockB] = useState<string>("INFY.NS");
   const [range, setRange] = useState<"1mo" | "3mo" | "6mo" | "1y" | "5y">("1y");
 
   const fetchHistory = useServerFn(getLiveHistory);
-  const fetchQuotes = useServerFn(getLiveQuotes);
-
-  const { data: quotesData } = useQuery({
-    queryKey: ["compare-quotes", stockA, stockB],
-    queryFn: () => fetchQuotes({ data: { tickers: [stockA, stockB] } }),
-    refetchInterval: 60_000,
-  });
+  const { quoteMap } = useLiveQuotes();
 
   const { data: historyA, isFetching: fetchA } = useQuery({
     queryKey: ["history", stockA, range],
@@ -61,21 +62,22 @@ function ComparePage() {
 
   const cfgA = TICKER_CONFIG[stockA as keyof typeof TICKER_CONFIG];
   const cfgB = TICKER_CONFIG[stockB as keyof typeof TICKER_CONFIG];
-  const qA = quotesData?.find((q) => q.ticker === stockA);
-  const qB = quotesData?.find((q) => q.ticker === stockB);
+  const qA = quoteMap.get(stockA);
+  const qB = quoteMap.get(stockB);
 
   // Fake AI winner logic based on simple price change
   const winner = (qA?.changePct ?? 0) > (qB?.changePct ?? 0) ? stockA : stockB;
 
-  return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <header className="mb-6">
-        <h1 className="font-heading text-3xl font-bold text-glow-green">Stock Comparison Center</h1>
-        <p className="text-muted-foreground mt-1">
-          Side-by-side performance, risk, and fundamentals analysis.
-        </p>
-      </header>
+  if (!limits.canCompare) {
+    return (
+      <PageShell title="Compare Stocks" subtitle="Side-by-side performance, risk, and fundamentals.">
+        <PlanGate requiredPlan="student" title="Compare Stocks" description="Compare two stocks side-by-side with charts, metrics, and AI winner analysis. Available on Student plan and above." />
+      </PageShell>
+    );
+  }
 
+  return (
+    <PageShell title="Compare Stocks" subtitle="Side-by-side performance, risk, and fundamentals analysis.">
       <div className="mb-6">
         <GlobalSearch />
       </div>
@@ -234,6 +236,6 @@ function ComparePage() {
           respective sectors. Ensure proper portfolio diversification.
         </p>
       </div>
-    </div>
+    </PageShell>
   );
 }

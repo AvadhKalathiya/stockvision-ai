@@ -1,7 +1,6 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap");
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -79,13 +78,15 @@
   --card-foreground: oklch(0.96 0.02 220);
   --popover: oklch(0.18 0.04 250);
   --popover-foreground: oklch(0.96 0.02 220);
-  --primary: oklch(0.87 0.2 165); /* neon green */
+  --primary: oklch(0.87 0.2 165);
+  /* neon green */
   --primary-foreground: oklch(0.15 0.05 165);
   --secondary: oklch(0.24 0.05 250);
   --secondary-foreground: oklch(0.96 0.02 220);
   --muted: oklch(0.24 0.04 250);
   --muted-foreground: oklch(0.7 0.05 235);
-  --accent: oklch(0.75 0.18 220); /* electric blue */
+  --accent: oklch(0.75 0.18 220);
+  /* electric blue */
   --accent-foreground: oklch(0.1 0.05 250);
   --destructive: oklch(0.65 0.25 25);
   --destructive-foreground: oklch(0.98 0.01 0);
@@ -162,27 +163,33 @@
   --shadow-card: 0 4px 18px oklch(0.18 0.04 250 / 0.08), inset 0 1px 0 oklch(1 0 0 / 0.6);
   --gradient-hero: linear-gradient(135deg, oklch(0.55 0.18 165), oklch(0.5 0.18 220));
 }
+
 .light .glass-card {
   background: oklch(1 0 0 / 0.85);
   border: 1px solid oklch(0.18 0.04 250 / 0.1);
 }
+
 .light .glass-card:hover {
   border-color: oklch(0.55 0.18 220 / 0.35);
   box-shadow:
     0 8px 28px oklch(0.18 0.04 250 / 0.12),
     0 0 16px oklch(0.55 0.18 220 / 0.12);
 }
+
 .light .text-glow-green {
   text-shadow: none;
 }
+
 .light body {
   background-image:
     radial-gradient(ellipse at top left, oklch(0.62 0.18 165 / 0.08), transparent 55%),
     radial-gradient(ellipse at bottom right, oklch(0.55 0.18 220 / 0.08), transparent 55%);
 }
+
 .light ::-webkit-scrollbar-thumb {
   background: oklch(0.18 0.04 250 / 0.2);
 }
+
 .light ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.18 0.04 250 / 0.35);
 }
@@ -201,6 +208,7 @@
       radial-gradient(ellipse at bottom right, oklch(0.75 0.18 220 / 0.06), transparent 50%);
     min-height: 100vh;
   }
+
   h1,
   h2,
   h3,
@@ -211,6 +219,7 @@
     font-family: var(--font-heading);
     letter-spacing: 0.02em;
   }
+
   .font-mono-nums {
     font-variant-numeric: tabular-nums;
   }
@@ -228,6 +237,7 @@
       box-shadow 0.2s,
       transform 0.2s;
   }
+
   .glass-card:hover {
     border-color: oklch(0.87 0.2 165 / 0.28);
     box-shadow:
@@ -235,27 +245,32 @@
       0 0 20px oklch(0.87 0.2 165 / 0.1);
     transform: translateY(-2px);
   }
+
   .badge-buy {
     background: var(--gradient-buy);
     color: oklch(0.12 0.04 165);
     box-shadow: var(--shadow-glow-green);
   }
+
   .badge-sell {
     background: var(--gradient-sell);
     color: oklch(0.98 0.01 0);
     box-shadow: 0 0 18px oklch(0.65 0.25 25 / 0.45);
   }
+
   .badge-hold {
     background: var(--gradient-hold);
     color: oklch(0.15 0.05 60);
     box-shadow: 0 0 18px oklch(0.75 0.18 70 / 0.45);
   }
+
   .text-gradient-hero {
     background: var(--gradient-hero);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
+
   .text-glow-green {
     text-shadow: 0 0 18px oklch(0.87 0.2 165 / 0.6);
   }
@@ -265,47 +280,60 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
 }
+
 @keyframes badgePulse {
+
   0%,
   100% {
     box-shadow: 0 0 8px oklch(0.87 0.2 165 / 0.4);
   }
+
   50% {
     box-shadow: 0 0 22px oklch(0.87 0.2 165 / 0.8);
   }
 }
+
 @keyframes ctaPulse {
+
   0%,
   100% {
     box-shadow: 0 0 0 0 oklch(0.87 0.2 165 / 0.4);
   }
+
   50% {
     box-shadow: 0 0 0 10px oklch(0.87 0.2 165 / 0);
   }
 }
+
 @keyframes ticker-scroll {
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-50%);
   }
 }
+
 .animate-shimmer {
   animation: shimmer 1.6s infinite linear;
   background: linear-gradient(90deg, transparent, oklch(0.87 0.2 165 / 0.08), transparent);
   background-size: 200% 100%;
 }
+
 .animate-badge-pulse {
   animation: badgePulse 2s infinite;
 }
+
 .animate-cta-pulse {
   animation: ctaPulse 2s infinite;
 }
+
 .animate-ticker {
   animation: ticker-scroll 60s linear infinite;
 }
@@ -315,13 +343,60 @@
   width: 8px;
   height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: oklch(0.87 0.2 165 / 0.2);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.87 0.2 165 / 0.4);
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.page-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.metric-card {
+  background: oklch(0.2 0.04 250 / 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.87 0.2 165 / 0.1);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.nav-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: oklch(0.7 0.05 235);
+  padding: 0.5rem 0.75rem 0.25rem;
+}
+
+.sentiment-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: oklch(0.24 0.04 250);
+  overflow: hidden;
+}
+
+.sentiment-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
 }
