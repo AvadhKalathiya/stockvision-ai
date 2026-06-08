@@ -52,7 +52,6 @@ function getAuthErrorMessage(error: unknown): string {
     return "Your confirmation link has expired. Please sign up again.";
   }
 
-  // Return the raw message if unrecognised, trimmed
   return msg.length > 120 ? msg.substring(0, 120) + "…" : msg;
 }
 
@@ -82,7 +81,6 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic client-side validation
     if (!email.trim()) {
       toast.error("Please enter your email address.");
       return;
@@ -114,19 +112,15 @@ function LoginPage() {
 
         if (error) throw error;
 
-        // Check if user already existed (identities array is empty when user exists)
         if (data.user && data.user.identities && data.user.identities.length === 0) {
           toast.error("An account with this email already exists. Please sign in instead.");
           setMode("signin");
           return;
         }
 
-        // If session is immediately available, email auto-confirm is on
         if (data.session) {
           toast.success("Account created! Welcome to StockVision AI.");
-          // authStore will pick up the session via onAuthStateChange
         } else {
-          // Email confirmation required
           setConfirmationSent(true);
           toast.success("Account created! Check your email for a confirmation link.");
         }
@@ -137,7 +131,6 @@ function LoginPage() {
         });
         if (error) throw error;
         toast.success("Welcome back!");
-        // Navigation handled by the useEffect above
       }
     } catch (err) {
       toast.error(getAuthErrorMessage(err));
@@ -146,8 +139,6 @@ function LoginPage() {
     }
   };
 
-  // ── Confirmation screen ──────────────────────────────────────────────────
-
   if (confirmationSent) {
     return (
       <main className="min-h-screen flex items-center justify-center px-4">
@@ -155,16 +146,11 @@ function LoginPage() {
           <Mail className="size-12 mx-auto text-primary" />
           <h1 className="font-heading text-2xl font-bold">Check your email</h1>
           <p className="text-muted-foreground text-sm">
-            We sent a confirmation link to{" "}
-            <span className="text-foreground font-medium">{email}</span>.
-            <br />
+            We sent a confirmation link to <span className="text-foreground font-medium">{email}</span>.<br />
             Click the link to activate your account, then sign in.
           </p>
           <button
-            onClick={() => {
-              setConfirmationSent(false);
-              setMode("signin");
-            }}
+            onClick={() => { setConfirmationSent(false); setMode("signin"); }}
             className="w-full px-4 py-2.5 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition"
           >
             Back to Sign in
@@ -178,11 +164,8 @@ function LoginPage() {
                 options: { emailRedirectTo: `${window.location.origin}/dashboard` },
               });
               setLoading(false);
-              if (error) {
-                toast.error(getAuthErrorMessage(error));
-              } else {
-                toast.success("Confirmation email resent.");
-              }
+              if (error) toast.error(getAuthErrorMessage(error));
+              else toast.success("Confirmation email resent.");
             }}
             disabled={loading}
             className="w-full text-sm text-muted-foreground hover:text-foreground transition disabled:opacity-50"
@@ -193,8 +176,6 @@ function LoginPage() {
       </main>
     );
   }
-
-  // ── Main login/signup form ───────────────────────────────────────────────
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-8">
@@ -219,7 +200,6 @@ function LoginPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3" noValidate>
-          {/* Name field (signup only) */}
           {mode === "signup" && (
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -235,7 +215,6 @@ function LoginPage() {
             </div>
           )}
 
-          {/* Email */}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <input
@@ -249,7 +228,6 @@ function LoginPage() {
             />
           </div>
 
-          {/* Password */}
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <input
@@ -272,7 +250,6 @@ function LoginPage() {
             </button>
           </div>
 
-          {/* Forgot password (sign in only) */}
           {mode === "signin" && (
             <div className="text-right">
               <button
@@ -287,11 +264,8 @@ function LoginPage() {
                     redirectTo: `${window.location.origin}/dashboard`,
                   });
                   setLoading(false);
-                  if (error) {
-                    toast.error(getAuthErrorMessage(error));
-                  } else {
-                    toast.success("Password reset email sent. Check your inbox.");
-                  }
+                  if (error) toast.error(getAuthErrorMessage(error));
+                  else toast.success("Password reset email sent. Check your inbox.");
                 }}
                 disabled={loading}
                 className="text-xs text-muted-foreground hover:text-primary transition disabled:opacity-50"
@@ -301,7 +275,6 @@ function LoginPage() {
             </div>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
@@ -330,6 +303,24 @@ function LoginPage() {
             {mode === "signin" ? "Sign up" : "Sign in"}
           </button>
         </p>
+
+        {/* === DEMO ACCOUNT SECTION === */}
+        <div className="mt-8 pt-6 border-t border-border">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <User className="size-4" />
+            <span className="font-medium">Demo Account</span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            For testing purposes:
+          </p>
+          <div className="bg-zinc-900/50 rounded-md p-3 text-xs space-y-1 font-mono">
+            <div><span className="text-muted-foreground">Email:</span> <span className="text-emerald-400">test@gmail.com</span></div>
+            <div><span className="text-muted-foreground">Password:</span> <span className="text-emerald-400">Test@1234</span></div>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2 text-center">
+            Demo credentials may be removed in production
+          </p>
+        </div>
       </div>
     </main>
   );
