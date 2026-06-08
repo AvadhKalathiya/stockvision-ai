@@ -5,3 +5,5 @@ dist
 .env.production
 .vercel
 .vscode
+.dev.vars
+*.dev.vars
