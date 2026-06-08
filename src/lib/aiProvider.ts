@@ -1,9 +1,12 @@
+import { geminiComplete, geminiStream, convertGeminiStreamToOpenAI, type ChatMessage as GeminiMessage } from "./ai/gemini";
+
 export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 
 export interface AIConfig {
-  provider: "gemini" | "openai";
+  provider: "gemini" | "openai" | "openrouter" | "groq";
   apiKey: string;
   model: string;
+  baseUrl?: string;
 }
 
 export function resolveAIConfig(): AIConfig | null {
@@ -12,7 +15,25 @@ export function resolveAIConfig(): AIConfig | null {
     return {
       provider: "gemini",
       apiKey: geminiKey,
-      model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
+      model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    };
+  }
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    return {
+      provider: "groq",
+      apiKey: groqKey,
+      model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+      baseUrl: "https://api.groq.com/openai/v1",
+    };
+  }
+  const openrouterKey = process.env.OPENROUTER_API_KEY;
+  if (openrouterKey) {
+    return {
+      provider: "openrouter",
+      apiKey: openrouterKey,
+      model: process.env.OPENROUTER_MODEL || "google/gemma-3-27b-it:free",
+      baseUrl: "https://openrouter.ai/api/v1",
     };
   }
   const openaiKey = process.env.OPENAI_API_KEY;
@@ -27,40 +48,12 @@ export function resolveAIConfig(): AIConfig | null {
 }
 
 export function aiNotConfiguredMessage(): string {
-  return "AI is not configured. Set GEMINI_API_KEY or OPENAI_API_KEY in your environment.";
-}
-
-async function geminiComplete(config: AIConfig, messages: ChatMessage[]): Promise<string> {
-  const system = messages.find((m) => m.role === "system")?.content ?? "";
-  const contents = messages
-    .filter((m) => m.role !== "system")
-    .map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      systemInstruction: system ? { parts: [{ text: system }] } : undefined,
-      contents,
-    }),
-  });
-  if (res.status === 429) throw new Error("Rate limit reached. Please wait and try again.");
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`Gemini error ${res.status}: ${t.slice(0, 200)}`);
-  }
-  const json = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-  };
-  return json.candidates?.[0]?.content?.parts?.[0]?.text ?? "(no response)";
+  return "AI is not configured. Set GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, or OPENAI_API_KEY in your environment.";
 }
 
 async function openaiComplete(config: AIConfig, messages: ChatMessage[]): Promise<string> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const baseUrl = config.baseUrl || "https://api.openai.com/v1";
+  const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -71,7 +64,8 @@ async function openaiComplete(config: AIConfig, messages: ChatMessage[]): Promis
   if (res.status === 429) throw new Error("Rate limit reached. Please wait and try again.");
   if (!res.ok) {
     const t = await res.text().catch(() => "");
-    throw new Error(`OpenAI error ${res.status}: ${t.slice(0, 200)}`);
+    console.error(`${config.provider} API Error:`, { status: res.status, error: t.slice(0, 200) });
+    throw new Error(`${config.provider} error ${res.status}: ${t.slice(0, 200)}`);
   }
   const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
   return json.choices?.[0]?.message?.content ?? "(no response)";
@@ -80,7 +74,19 @@ async function openaiComplete(config: AIConfig, messages: ChatMessage[]): Promis
 export async function aiChatComplete(messages: ChatMessage[]): Promise<string> {
   const config = resolveAIConfig();
   if (!config) throw new Error(aiNotConfiguredMessage());
-  if (config.provider === "gemini") return geminiComplete(config, messages);
+  
+  if (config.provider === "gemini") {
+    try {
+      return await geminiComplete(
+        { apiKey: config.apiKey, model: config.model },
+        messages as GeminiMessage[],
+      );
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      throw new Error("AI service temporarily unavailable. Please try again.");
+    }
+  }
+  
   return openaiComplete(config, messages);
 }
 
@@ -91,8 +97,9 @@ export async function aiChatStream(
   const config = resolveAIConfig();
   if (!config) throw new Error(aiNotConfiguredMessage());
 
-  if (config.provider === "openai") {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  if (config.provider === "openai" || config.provider === "openrouter" || config.provider === "groq") {
+    const baseUrl = config.baseUrl || "https://api.openai.com/v1";
+    const res = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -103,22 +110,25 @@ export async function aiChatStream(
     if (res.status === 429) throw new Error("Rate limit reached. Please wait and try again.");
     if (!res.ok || !res.body) {
       const t = await res.text().catch(() => "");
-      throw new Error(`OpenAI error ${res.status}: ${t.slice(0, 200)}`);
+      console.error(`${config.provider} API Error:`, { status: res.status, error: t.slice(0, 200) });
+      throw new Error(`${config.provider} error ${res.status}: ${t.slice(0, 200)}`);
     }
     return { body: res.body, contentType: "text/event-stream" };
   }
 
-  const text = await geminiComplete(config, messages);
-  const encoder = new TextEncoder();
-  const body = new ReadableStream<Uint8Array>({
-    start(controller) {
-      const chunk = {
-        choices: [{ delta: { content: text } }],
-      };
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
-      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-      controller.close();
-    },
-  });
-  return { body, contentType: "text/event-stream" };
+  if (config.provider === "gemini") {
+    try {
+      const geminiStreamBody = await geminiStream(
+        { apiKey: config.apiKey, model: config.model },
+        messages as GeminiMessage[],
+      );
+      const openaiStream = convertGeminiStreamToOpenAI(geminiStreamBody);
+      return { body: openaiStream, contentType: "text/event-stream" };
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      throw new Error("AI service temporarily unavailable. Please try again.");
+    }
+  }
+
+  throw new Error("AI service temporarily unavailable. Please try again.");
 }

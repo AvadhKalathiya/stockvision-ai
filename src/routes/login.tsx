@@ -33,8 +33,8 @@ function getAuthErrorMessage(error: unknown): string {
   if (lower.includes("user already registered") || lower.includes("already registered") || lower.includes("user_already_exists")) {
     return "An account with this email already exists. Please sign in instead.";
   }
-  if (lower.includes("email_address_invalid") || lower.includes("invalid") && lower.includes("email")) {
-    return "This email address is not accepted. Please use a work or personal email (not gmail/hotmail).";
+  if (lower.includes("email_address_invalid")) {
+    return "Please enter a valid email address.";
   }
   if (lower.includes("password") && (lower.includes("weak") || lower.includes("short") || lower.includes("characters"))) {
     return "Password must be at least 6 characters long.";
@@ -330,14 +330,6 @@ function LoginPage() {
             {mode === "signin" ? "Sign up" : "Sign in"}
           </button>
         </p>
-
-        {/* Note about email restriction */}
-        {mode === "signup" && (
-          <p className="text-center text-[11px] text-muted-foreground/60 mt-3">
-            Use a work or personal email. Some providers (Gmail, Hotmail) may not be accepted
-            depending on project settings.
-          </p>
-        )}
       </div>
     </main>
   );

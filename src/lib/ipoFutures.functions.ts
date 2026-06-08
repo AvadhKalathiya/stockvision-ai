@@ -147,6 +147,118 @@ async function fetchBseIpos(): Promise<IpoItem[]> {
   }));
 }
 
+async function fetchChittorgarhIpos(): Promise<IpoItem[]> {
+  const url = "https://www.chittorgarh.com/ipo/mainboard_ipos.asp";
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA, Accept: "text/html" },
+  });
+  if (!res.ok) return [];
+  
+  const html = await res.text();
+  const items: IpoItem[] = [];
+  
+  const tableMatch = html.match(/<table[^>]*class="[^"]*ipo[^"]*"[^>]*>([\s\S]*?)<\/table>/i);
+  if (!tableMatch) return items;
+  
+  const rowMatches = tableMatch[1].match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+  if (!rowMatches) return items;
+  
+  for (const row of rowMatches.slice(1, 20)) {
+    const cellMatches = row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
+    if (!cellMatches || cellMatches.length < 6) continue;
+    
+    const name = cellMatches[0]?.replace(/<[^>]*>/g, "").trim() || "";
+    const priceBand = cellMatches[1]?.replace(/<[^>]*>/g, "").trim() || "";
+    const openDate = cellMatches[2]?.replace(/<[^>]*>/g, "").trim() || "";
+    const closeDate = cellMatches[3]?.replace(/<[^>]*>/g, "").trim() || "";
+    const status = cellMatches[4]?.replace(/<[^>]*>/g, "").trim().toLowerCase() || "";
+    
+    if (!name || name === "Company Name") continue;
+    
+    items.push({
+      name,
+      market: "INDIA",
+      status: status.includes("open") ? "open" : status.includes("list") ? "listed" : status.includes("close") ? "closed" : "upcoming",
+      openDate: openDate || undefined,
+      closeDate: closeDate || undefined,
+      priceBand: priceBand || "—",
+      exchange: "NSE",
+      source: "exchange",
+    });
+  }
+  
+  return items;
+}
+
+async function fetchInvestorGainIpos(): Promise<IpoItem[]> {
+  const url = "https://www.investorgain.com/ipo-calendar/";
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA, Accept: "text/html" },
+  });
+  if (!res.ok) return [];
+  
+  const html = await res.text();
+  const items: IpoItem[] = [];
+  
+  const cardMatches = html.match(/<div[^>]*class="[^"]*ipo-card[^"]*"[^>]*>([\s\S]*?)<\/div>/gi);
+  if (!cardMatches) return items;
+  
+  for (const card of cardMatches.slice(0, 15)) {
+    const nameMatch = card.match(/<h3[^>]*>([^<]+)<\/h3>/i);
+    const priceMatch = card.match(/price[^:]*:\s*([^<]+)/i);
+    const dateMatch = card.match(/(?:open|close)[^:]*:\s*([^<]+)/i);
+    const statusMatch = card.match(/status[^:]*:\s*([^<]+)/i);
+    
+    const name = nameMatch?.[1]?.trim() || "";
+    const priceBand = priceMatch?.[1]?.trim() || "";
+    const date = dateMatch?.[1]?.trim() || "";
+    const status = statusMatch?.[1]?.trim().toLowerCase() || "";
+    
+    if (!name) continue;
+    
+    items.push({
+      name,
+      market: "INDIA",
+      status: status.includes("open") ? "open" : status.includes("list") ? "listed" : status.includes("close") ? "closed" : "upcoming",
+      openDate: date || undefined,
+      priceBand: priceBand || "—",
+      exchange: "NSE",
+      source: "exchange",
+    });
+  }
+  
+  return items;
+}
+
+async function fetchGmpData(): Promise<Record<string, number>> {
+  const url = "https://www.chittorgarh.com/ipo/gmp.asp";
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA, Accept: "text/html" },
+  });
+  if (!res.ok) return {};
+  
+  const html = await res.text();
+  const gmpMap: Record<string, number> = {};
+  
+  const rowMatches = html.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi);
+  if (!rowMatches) return gmpMap;
+  
+  for (const row of rowMatches.slice(1, 30)) {
+    const cellMatches = row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
+    if (!cellMatches || cellMatches.length < 3) continue;
+    
+    const name = cellMatches[0]?.replace(/<[^>]*>/g, "").trim() || "";
+    const gmpText = cellMatches[1]?.replace(/<[^>]*>/g, "").trim() || "";
+    const gmp = parseFloat(gmpText.replace(/[^\d.-]/g, ""));
+    
+    if (name && !isNaN(gmp)) {
+      gmpMap[name.toLowerCase()] = gmp;
+    }
+  }
+  
+  return gmpMap;
+}
+
 export const getIpoCalendar = createServerFn({ method: "POST" })
   .inputValidator(z.object({ market: z.enum(["INDIA", "GLOBAL", "ALL"]).default("INDIA") }).parse)
   .handler(async (): Promise<IpoItem[]> => {
@@ -170,6 +282,30 @@ export const getIpoCalendar = createServerFn({ method: "POST" })
       results.push(...(await fetchBseIpos()));
     } catch (err) {
       console.error("BSE IPO:", err);
+    }
+
+    try {
+      results.push(...(await fetchChittorgarhIpos()));
+    } catch (err) {
+      console.error("Chittorgarh IPO:", err);
+    }
+
+    try {
+      results.push(...(await fetchInvestorGainIpos()));
+    } catch (err) {
+      console.error("InvestorGain IPO:", err);
+    }
+
+    try {
+      const gmpData = await fetchGmpData();
+      for (const item of results) {
+        const gmp = gmpData[item.name.toLowerCase()];
+        if (gmp !== undefined) {
+          item.gmp = gmp;
+        }
+      }
+    } catch (err) {
+      console.error("GMP data:", err);
     }
 
     const seen = new Set<string>();

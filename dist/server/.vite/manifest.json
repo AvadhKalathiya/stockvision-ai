@@ -1,0 +1,1037 @@
+{
+  "%23tanstack-start-plugin-adapters": {
+    "file": "assets/__23tanstack-start-plugin-adapters-Cwee5PKy.js",
+    "name": "__23tanstack-start-plugin-adapters",
+    "src": "%23tanstack-start-plugin-adapters",
+    "isDynamicEntry": true
+  },
+  "D:/STOCKVISION AI/src/styles.css": {
+    "file": "assets/styles-DD93rwsf.css",
+    "src": "D:/STOCKVISION AI/src/styles.css"
+  },
+  "_GlobalSearch-lo70RBD4.js": {
+    "file": "assets/GlobalSearch-lo70RBD4.js",
+    "name": "GlobalSearch",
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_search-CogVE9sq.js",
+      "_x-DJQb9mxA.js"
+    ]
+  },
+  "_PageShell-AvoXgHto.js": {
+    "file": "assets/PageShell-AvoXgHto.js",
+    "name": "PageShell",
+    "imports": [
+      "_server-Cgfy5VtR.js"
+    ]
+  },
+  "_PlanGate-DsC5xI-0.js": {
+    "file": "assets/PlanGate-DsC5xI-0.js",
+    "name": "PlanGate",
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_planLimits-DfVfhYvW.js",
+      "_lock-DqkAvhsx.js",
+      "_sparkles-BzGaueQV.js"
+    ]
+  },
+  "_QueryState-D4yWYCiQ.js": {
+    "file": "assets/QueryState-D4yWYCiQ.js",
+    "name": "QueryState",
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_triangle-alert-Vsq-qEcN.js"
+    ]
+  },
+  "_Sparkline-B4diw_8e.js": {
+    "file": "assets/Sparkline-B4diw_8e.js",
+    "name": "Sparkline",
+    "imports": [
+      "_server-Cgfy5VtR.js"
+    ]
+  },
+  "_YAxis-d-0IhvJV.js": {
+    "file": "assets/YAxis-d-0IhvJV.js",
+    "name": "YAxis",
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_generateCategoricalChart-DWEqI6XE.js",
+      "_clsx-DgYk2OaC.js"
+    ]
+  },
+  "_activity-q82JxRi-.js": {
+    "file": "assets/activity-q82JxRi-.js",
+    "name": "activity",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_aiProvider-Cvi-Tcv4.js": {
+    "file": "assets/aiProvider-Cvi-Tcv4.js",
+    "name": "aiProvider"
+  },
+  "_auth-middleware-BerO8flI.js": {
+    "file": "assets/auth-middleware-BerO8flI.js",
+    "name": "auth-middleware",
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_index-ChW4vIqc.js"
+    ]
+  },
+  "_bell-BSResAWd.js": {
+    "file": "assets/bell-BSResAWd.js",
+    "name": "bell",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_briefcase-CdypnbFT.js": {
+    "file": "assets/briefcase-CdypnbFT.js",
+    "name": "briefcase",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_calendar-Myi_kxH_.js": {
+    "file": "assets/calendar-Myi_kxH_.js",
+    "name": "calendar",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_chart-pie-_Q0-BHGH.js": {
+    "file": "assets/chart-pie-_Q0-BHGH.js",
+    "name": "chart-pie",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_check-D33LoE7I.js": {
+    "file": "assets/check-D33LoE7I.js",
+    "name": "check",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_client-T0sJvQy8.js": {
+    "file": "assets/client-T0sJvQy8.js",
+    "name": "client",
+    "imports": [
+      "_index-ChW4vIqc.js"
+    ]
+  },
+  "_clsx-DgYk2OaC.js": {
+    "file": "assets/clsx-DgYk2OaC.js",
+    "name": "clsx"
+  },
+  "_createLucideIcon-DvD_YuaJ.js": {
+    "file": "assets/createLucideIcon-DvD_YuaJ.js",
+    "name": "createLucideIcon",
+    "imports": [
+      "_server-Cgfy5VtR.js"
+    ]
+  },
+  "_createServerRpc-Cl0K4URf.js": {
+    "file": "assets/createServerRpc-Cl0K4URf.js",
+    "name": "createServerRpc",
+    "imports": [
+      "_server-Cgfy5VtR.js"
+    ]
+  },
+  "_createSsrRpc-CXvRzAXX.js": {
+    "file": "assets/createSsrRpc-CXvRzAXX.js",
+    "name": "createSsrRpc",
+    "imports": [
+      "_server-Cgfy5VtR.js"
+    ]
+  },
+  "_csv-BJhimuzA.js": {
+    "file": "assets/csv-BJhimuzA.js",
+    "name": "csv",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_generateCategoricalChart-DWEqI6XE.js": {
+    "file": "assets/generateCategoricalChart-DWEqI6XE.js",
+    "name": "generateCategoricalChart",
+    "imports": [
+      "_clsx-DgYk2OaC.js",
+      "_server-Cgfy5VtR.js"
+    ]
+  },
+  "_history-6GR7AgXc.js": {
+    "file": "assets/history-6GR7AgXc.js",
+    "name": "history",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_index-ChW4vIqc.js": {
+    "file": "assets/index-ChW4vIqc.js",
+    "name": "index"
+  },
+  "_ipoFutures.functions-bX0OmTq4.js": {
+    "file": "assets/ipoFutures.functions-bX0OmTq4.js",
+    "name": "ipoFutures.functions",
+    "imports": [
+      "_createSsrRpc-CXvRzAXX.js",
+      "_server-Cgfy5VtR.js",
+      "_types-BfPr8xct.js"
+    ]
+  },
+  "_loader-circle-Byol8VGZ.js": {
+    "file": "assets/loader-circle-Byol8VGZ.js",
+    "name": "loader-circle",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_lock-DqkAvhsx.js": {
+    "file": "assets/lock-DqkAvhsx.js",
+    "name": "lock",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_marketOverview-Cmjpw8gU.js": {
+    "file": "assets/marketOverview-Cmjpw8gU.js",
+    "name": "marketOverview",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_planLimits-DfVfhYvW.js": {
+    "file": "assets/planLimits-DfVfhYvW.js",
+    "name": "planLimits"
+  },
+  "_planUsage-C6qDsdHT.js": {
+    "file": "assets/planUsage-C6qDsdHT.js",
+    "name": "planUsage"
+  },
+  "_plus-CSvLupSh.js": {
+    "file": "assets/plus-CSvLupSh.js",
+    "name": "plus",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_radio-B5QjGWC0.js": {
+    "file": "assets/radio-B5QjGWC0.js",
+    "name": "radio",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_refresh-cw-BUr9OHaX.js": {
+    "file": "assets/refresh-cw-BUr9OHaX.js",
+    "name": "refresh-cw",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_rocket-CQuq0BNT.js": {
+    "file": "assets/rocket-CQuq0BNT.js",
+    "name": "rocket",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_router-C3k8-z80.js": {
+    "file": "assets/router-C3k8-z80.js",
+    "name": "router",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js"
+    ],
+    "dynamicImports": [
+      "src/routes/login.tsx?tsr-split=component",
+      "src/routes/_authenticated.tsx?tsr-split=component",
+      "src/routes/index.tsx?tsr-split=component",
+      "src/routes/_authenticated/watchlist.tsx?tsr-split=component",
+      "src/routes/_authenticated/simulator.tsx?tsr-split=component",
+      "src/routes/_authenticated/settings.tsx?tsr-split=component",
+      "src/routes/_authenticated/sectors.tsx?tsr-split=component",
+      "src/routes/_authenticated/screener.tsx?tsr-split=component",
+      "src/routes/_authenticated/portfolio.tsx?tsr-split=component",
+      "src/routes/_authenticated/news.tsx?tsr-split=component",
+      "src/routes/_authenticated/ipo-futures.tsx?tsr-split=component",
+      "src/routes/_authenticated/ipo.tsx?tsr-split=component",
+      "src/routes/_authenticated/insights.tsx?tsr-split=component",
+      "src/routes/_authenticated/history.tsx?tsr-split=component",
+      "src/routes/_authenticated/heatmap.tsx?tsr-split=component",
+      "src/routes/_authenticated/forecast.tsx?tsr-split=component",
+      "src/routes/_authenticated/events.tsx?tsr-split=component",
+      "src/routes/_authenticated/dashboard.tsx?tsr-split=component",
+      "src/routes/_authenticated/compare.tsx?tsr-split=component",
+      "src/routes/_authenticated/chat.tsx?tsr-split=component",
+      "src/routes/_authenticated/alerts.tsx?tsr-split=component"
+    ],
+    "assets": [
+      "assets/styles-DD93rwsf.css"
+    ]
+  },
+  "_search-CogVE9sq.js": {
+    "file": "assets/search-CogVE9sq.js",
+    "name": "search",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_server-Cgfy5VtR.js": {
+    "file": "assets/server-Cgfy5VtR.js",
+    "name": "server",
+    "isDynamicEntry": true,
+    "dynamicImports": [
+      "tanstack-start-manifest:v",
+      "src/lib/ipoFutures.functions.ts?tss-serverfn-split",
+      "src/lib/yahooFinance.functions.ts?tss-serverfn-split",
+      "src/lib/yahooFinance.functions.ts?tss-serverfn-split",
+      "src/lib/yahooFinance.functions.ts?tss-serverfn-split",
+      "src/lib/ai.functions.ts?tss-serverfn-split",
+      "src/lib/ai.functions.ts?tss-serverfn-split",
+      "src/lib/yahooFinance.functions.ts?tss-serverfn-split",
+      "src/lib/yahooFinance.functions.ts?tss-serverfn-split",
+      "src/lib/ipoFutures.functions.ts?tss-serverfn-split",
+      "_router-C3k8-z80.js",
+      "src/start.ts",
+      "%23tanstack-start-plugin-adapters"
+    ]
+  },
+  "_shield-alert-DdNirUSM.js": {
+    "file": "assets/shield-alert-DdNirUSM.js",
+    "name": "shield-alert",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_sparkles-BzGaueQV.js": {
+    "file": "assets/sparkles-BzGaueQV.js",
+    "name": "sparkles",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_star-DhPIhgY3.js": {
+    "file": "assets/star-DhPIhgY3.js",
+    "name": "star",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_tickerConfig-7S1tvlm8.js": {
+    "file": "assets/tickerConfig-7S1tvlm8.js",
+    "name": "tickerConfig"
+  },
+  "_trash-2-B3iTgfN2.js": {
+    "file": "assets/trash-2-B3iTgfN2.js",
+    "name": "trash-2",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_trending-down-DVlp6VhU.js": {
+    "file": "assets/trending-down-DVlp6VhU.js",
+    "name": "trending-down",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_trending-up-r08gGgu4.js": {
+    "file": "assets/trending-up-r08gGgu4.js",
+    "name": "trending-up",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_triangle-alert-Vsq-qEcN.js": {
+    "file": "assets/triangle-alert-Vsq-qEcN.js",
+    "name": "triangle-alert",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_types-BfPr8xct.js": {
+    "file": "assets/types-BfPr8xct.js",
+    "name": "types"
+  },
+  "_useLiveQuotes-a6H7Jnr0.js": {
+    "file": "assets/useLiveQuotes-a6H7Jnr0.js",
+    "name": "useLiveQuotes",
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_router-C3k8-z80.js",
+      "_planLimits-DfVfhYvW.js"
+    ]
+  },
+  "_useQuery-DpcV55YJ.js": {
+    "file": "assets/useQuery-DpcV55YJ.js",
+    "name": "useQuery",
+    "imports": [
+      "_router-C3k8-z80.js",
+      "_server-Cgfy5VtR.js"
+    ]
+  },
+  "_worker-entry-CwrhVR88.js": {
+    "file": "assets/worker-entry-CwrhVR88.js",
+    "name": "worker-entry",
+    "dynamicImports": [
+      "_server-Cgfy5VtR.js"
+    ]
+  },
+  "_x-DJQb9mxA.js": {
+    "file": "assets/x-DJQb9mxA.js",
+    "name": "x",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "_yahooFinance.functions-CNaRUXD5.js": {
+    "file": "assets/yahooFinance.functions-CNaRUXD5.js",
+    "name": "yahooFinance.functions",
+    "imports": [
+      "_createSsrRpc-CXvRzAXX.js",
+      "_server-Cgfy5VtR.js",
+      "_types-BfPr8xct.js"
+    ]
+  },
+  "_zap-s63ztzaO.js": {
+    "file": "assets/zap-s63ztzaO.js",
+    "name": "zap",
+    "imports": [
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "src/lib/ai.functions.ts?tss-serverfn-split": {
+    "file": "assets/ai.functions-CL_3tl-H.js",
+    "name": "ai.functions",
+    "src": "src/lib/ai.functions.ts?tss-serverfn-split",
+    "isDynamicEntry": true,
+    "imports": [
+      "_createServerRpc-Cl0K4URf.js",
+      "_server-Cgfy5VtR.js",
+      "_auth-middleware-BerO8flI.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_index-ChW4vIqc.js"
+    ]
+  },
+  "src/lib/ipoFutures.functions.ts?tss-serverfn-split": {
+    "file": "assets/ipoFutures.functions-DNq2JTEh.js",
+    "name": "ipoFutures.functions",
+    "src": "src/lib/ipoFutures.functions.ts?tss-serverfn-split",
+    "isDynamicEntry": true,
+    "imports": [
+      "_createServerRpc-Cl0K4URf.js",
+      "_server-Cgfy5VtR.js",
+      "_types-BfPr8xct.js"
+    ]
+  },
+  "src/lib/yahooFinance.functions.ts?tss-serverfn-split": {
+    "file": "assets/yahooFinance.functions-B-YGyfdu.js",
+    "name": "yahooFinance.functions",
+    "src": "src/lib/yahooFinance.functions.ts?tss-serverfn-split",
+    "isDynamicEntry": true,
+    "imports": [
+      "_createServerRpc-Cl0K4URf.js",
+      "_server-Cgfy5VtR.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_types-BfPr8xct.js"
+    ]
+  },
+  "src/routes/_authenticated.tsx?tsr-split=component": {
+    "file": "assets/_authenticated-CyXOGlFT.js",
+    "name": "_authenticated",
+    "src": "src/routes/_authenticated.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_planLimits-DfVfhYvW.js",
+      "_index-ChW4vIqc.js",
+      "_clsx-DgYk2OaC.js",
+      "_x-DJQb9mxA.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_chart-pie-_Q0-BHGH.js",
+      "_sparkles-BzGaueQV.js",
+      "_briefcase-CdypnbFT.js",
+      "_bell-BSResAWd.js",
+      "_trending-up-r08gGgu4.js",
+      "_rocket-CQuq0BNT.js",
+      "_history-6GR7AgXc.js",
+      "_client-T0sJvQy8.js",
+      "_aiProvider-Cvi-Tcv4.js"
+    ]
+  },
+  "src/routes/_authenticated/alerts.tsx?tsr-split=component": {
+    "file": "assets/alerts-CK-a8NB4.js",
+    "name": "alerts",
+    "src": "src/routes/_authenticated/alerts.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_client-T0sJvQy8.js",
+      "_router-C3k8-z80.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_PageShell-AvoXgHto.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_planLimits-DfVfhYvW.js",
+      "_PlanGate-DsC5xI-0.js",
+      "_plus-CSvLupSh.js",
+      "_trash-2-B3iTgfN2.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_types-BfPr8xct.js",
+      "_lock-DqkAvhsx.js",
+      "_sparkles-BzGaueQV.js"
+    ]
+  },
+  "src/routes/_authenticated/chat.tsx?tsr-split=component": {
+    "file": "assets/chat-D7d1rXT_.js",
+    "name": "chat",
+    "src": "src/routes/_authenticated/chat.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_router-C3k8-z80.js",
+      "_client-T0sJvQy8.js",
+      "_PageShell-AvoXgHto.js",
+      "_planLimits-DfVfhYvW.js",
+      "_planUsage-C6qDsdHT.js",
+      "_sparkles-BzGaueQV.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_trash-2-B3iTgfN2.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_types-BfPr8xct.js",
+      "_index-ChW4vIqc.js"
+    ]
+  },
+  "src/routes/_authenticated/compare.tsx?tsr-split=component": {
+    "file": "assets/compare-Ld-BR_Ry.js",
+    "name": "compare",
+    "src": "src/routes/_authenticated/compare.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_GlobalSearch-lo70RBD4.js",
+      "_router-C3k8-z80.js",
+      "_planLimits-DfVfhYvW.js",
+      "_PlanGate-DsC5xI-0.js",
+      "_PageShell-AvoXgHto.js",
+      "_generateCategoricalChart-DWEqI6XE.js",
+      "_YAxis-d-0IhvJV.js",
+      "_types-BfPr8xct.js",
+      "_search-CogVE9sq.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_x-DJQb9mxA.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_lock-DqkAvhsx.js",
+      "_sparkles-BzGaueQV.js",
+      "_clsx-DgYk2OaC.js"
+    ]
+  },
+  "src/routes/_authenticated/dashboard.tsx?tsr-split=component": {
+    "file": "assets/dashboard-D6FzF48j.js",
+    "name": "dashboard",
+    "src": "src/routes/_authenticated/dashboard.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_marketOverview-Cmjpw8gU.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_client-T0sJvQy8.js",
+      "_GlobalSearch-lo70RBD4.js",
+      "_radio-B5QjGWC0.js",
+      "_Sparkline-B4diw_8e.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_PageShell-AvoXgHto.js",
+      "_QueryState-D4yWYCiQ.js",
+      "_planLimits-DfVfhYvW.js",
+      "_PlanGate-DsC5xI-0.js",
+      "_sparkles-BzGaueQV.js",
+      "_trending-up-r08gGgu4.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_activity-q82JxRi-.js",
+      "_trending-down-DVlp6VhU.js",
+      "_briefcase-CdypnbFT.js",
+      "_zap-s63ztzaO.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_types-BfPr8xct.js",
+      "_search-CogVE9sq.js",
+      "_x-DJQb9mxA.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_triangle-alert-Vsq-qEcN.js",
+      "_lock-DqkAvhsx.js"
+    ]
+  },
+  "src/routes/_authenticated/events.tsx?tsr-split=component": {
+    "file": "assets/events-DxxMcotE.js",
+    "name": "events",
+    "src": "src/routes/_authenticated/events.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_calendar-Myi_kxH_.js",
+      "_briefcase-CdypnbFT.js",
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "src/routes/_authenticated/forecast.tsx?tsr-split=component": {
+    "file": "assets/forecast-Bf0Im0uH.js",
+    "name": "forecast",
+    "src": "src/routes/_authenticated/forecast.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_client-T0sJvQy8.js",
+      "_router-C3k8-z80.js",
+      "_GlobalSearch-lo70RBD4.js",
+      "_planLimits-DfVfhYvW.js",
+      "_planUsage-C6qDsdHT.js",
+      "_radio-B5QjGWC0.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_check-D33LoE7I.js",
+      "_x-DJQb9mxA.js",
+      "_bell-BSResAWd.js",
+      "_generateCategoricalChart-DWEqI6XE.js",
+      "_clsx-DgYk2OaC.js",
+      "_YAxis-d-0IhvJV.js",
+      "_types-BfPr8xct.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_search-CogVE9sq.js",
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "src/routes/_authenticated/heatmap.tsx?tsr-split=component": {
+    "file": "assets/heatmap-DZ7l87D6.js",
+    "name": "heatmap",
+    "src": "src/routes/_authenticated/heatmap.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_GlobalSearch-lo70RBD4.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_PageShell-AvoXgHto.js",
+      "_QueryState-D4yWYCiQ.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_search-CogVE9sq.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_x-DJQb9mxA.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_types-BfPr8xct.js",
+      "_planLimits-DfVfhYvW.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_triangle-alert-Vsq-qEcN.js"
+    ]
+  },
+  "src/routes/_authenticated/history.tsx?tsr-split=component": {
+    "file": "assets/history-XpkSQ-w_.js",
+    "name": "history",
+    "src": "src/routes/_authenticated/history.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_client-T0sJvQy8.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_csv-BJhimuzA.js",
+      "_planLimits-DfVfhYvW.js",
+      "_PlanGate-DsC5xI-0.js",
+      "_PageShell-AvoXgHto.js",
+      "_history-6GR7AgXc.js",
+      "_search-CogVE9sq.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_trash-2-B3iTgfN2.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_types-BfPr8xct.js",
+      "_lock-DqkAvhsx.js",
+      "_sparkles-BzGaueQV.js"
+    ]
+  },
+  "src/routes/_authenticated/insights.tsx?tsr-split=component": {
+    "file": "assets/insights-5JBaUGFj.js",
+    "name": "insights",
+    "src": "src/routes/_authenticated/insights.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_PageShell-AvoXgHto.js",
+      "_QueryState-D4yWYCiQ.js",
+      "_planLimits-DfVfhYvW.js",
+      "_PlanGate-DsC5xI-0.js",
+      "_trending-up-r08gGgu4.js",
+      "_trending-down-DVlp6VhU.js",
+      "_shield-alert-DdNirUSM.js",
+      "_activity-q82JxRi-.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_sparkles-BzGaueQV.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_types-BfPr8xct.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_triangle-alert-Vsq-qEcN.js",
+      "_lock-DqkAvhsx.js"
+    ]
+  },
+  "src/routes/_authenticated/ipo-futures.tsx?tsr-split=component": {
+    "file": "assets/ipo-futures-C9YWcCvh.js",
+    "name": "ipo-futures",
+    "src": "src/routes/_authenticated/ipo-futures.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_useQuery-DpcV55YJ.js",
+      "_router-C3k8-z80.js",
+      "_ipoFutures.functions-bX0OmTq4.js",
+      "_client-T0sJvQy8.js",
+      "_rocket-CQuq0BNT.js",
+      "_trending-up-r08gGgu4.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_triangle-alert-Vsq-qEcN.js",
+      "_plus-CSvLupSh.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_types-BfPr8xct.js",
+      "_createLucideIcon-DvD_YuaJ.js"
+    ]
+  },
+  "src/routes/_authenticated/ipo.tsx?tsr-split=component": {
+    "file": "assets/ipo-Bvs9ZKle.js",
+    "name": "ipo",
+    "src": "src/routes/_authenticated/ipo.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_ipoFutures.functions-bX0OmTq4.js",
+      "_PageShell-AvoXgHto.js",
+      "_QueryState-D4yWYCiQ.js",
+      "_router-C3k8-z80.js",
+      "_planLimits-DfVfhYvW.js",
+      "_PlanGate-DsC5xI-0.js",
+      "_calendar-Myi_kxH_.js",
+      "_rocket-CQuq0BNT.js",
+      "_trending-up-r08gGgu4.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_types-BfPr8xct.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_triangle-alert-Vsq-qEcN.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_lock-DqkAvhsx.js",
+      "_sparkles-BzGaueQV.js"
+    ]
+  },
+  "src/routes/_authenticated/news.tsx?tsr-split=component": {
+    "file": "assets/news-RKG0gwl5.js",
+    "name": "news",
+    "src": "src/routes/_authenticated/news.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_auth-middleware-BerO8flI.js",
+      "_router-C3k8-z80.js",
+      "_client-T0sJvQy8.js",
+      "_PageShell-AvoXgHto.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_search-CogVE9sq.js",
+      "_x-DJQb9mxA.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_star-DhPIhgY3.js",
+      "_trending-up-r08gGgu4.js",
+      "_trending-down-DVlp6VhU.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_index-ChW4vIqc.js"
+    ]
+  },
+  "src/routes/_authenticated/portfolio.tsx?tsr-split=component": {
+    "file": "assets/portfolio-p5t4NFrH.js",
+    "name": "portfolio",
+    "src": "src/routes/_authenticated/portfolio.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_client-T0sJvQy8.js",
+      "_router-C3k8-z80.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_PageShell-AvoXgHto.js",
+      "_QueryState-D4yWYCiQ.js",
+      "_planLimits-DfVfhYvW.js",
+      "_sparkles-BzGaueQV.js",
+      "_generateCategoricalChart-DWEqI6XE.js",
+      "_clsx-DgYk2OaC.js",
+      "_chart-pie-_Q0-BHGH.js",
+      "_shield-alert-DdNirUSM.js",
+      "_plus-CSvLupSh.js",
+      "_trash-2-B3iTgfN2.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_types-BfPr8xct.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_triangle-alert-Vsq-qEcN.js"
+    ]
+  },
+  "src/routes/_authenticated/screener.tsx?tsr-split=component": {
+    "file": "assets/screener-Bmb2ZAfX.js",
+    "name": "screener",
+    "src": "src/routes/_authenticated/screener.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_GlobalSearch-lo70RBD4.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_PageShell-AvoXgHto.js",
+      "_QueryState-D4yWYCiQ.js",
+      "_planLimits-DfVfhYvW.js",
+      "_trending-up-r08gGgu4.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_zap-s63ztzaO.js",
+      "_activity-q82JxRi-.js",
+      "_sparkles-BzGaueQV.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_search-CogVE9sq.js",
+      "_x-DJQb9mxA.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_types-BfPr8xct.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_triangle-alert-Vsq-qEcN.js"
+    ]
+  },
+  "src/routes/_authenticated/sectors.tsx?tsr-split=component": {
+    "file": "assets/sectors-BOs9sBs-.js",
+    "name": "sectors",
+    "src": "src/routes/_authenticated/sectors.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_PageShell-AvoXgHto.js",
+      "_QueryState-D4yWYCiQ.js",
+      "_router-C3k8-z80.js",
+      "_planLimits-DfVfhYvW.js",
+      "_PlanGate-DsC5xI-0.js",
+      "_marketOverview-Cmjpw8gU.js",
+      "_briefcase-CdypnbFT.js",
+      "_trending-up-r08gGgu4.js",
+      "_trending-down-DVlp6VhU.js",
+      "_sparkles-BzGaueQV.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_types-BfPr8xct.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_loader-circle-Byol8VGZ.js",
+      "_triangle-alert-Vsq-qEcN.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_lock-DqkAvhsx.js"
+    ]
+  },
+  "src/routes/_authenticated/settings.tsx?tsr-split=component": {
+    "file": "assets/settings-CHbjB91X.js",
+    "name": "settings",
+    "src": "src/routes/_authenticated/settings.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_client-T0sJvQy8.js",
+      "_planLimits-DfVfhYvW.js",
+      "_csv-BJhimuzA.js",
+      "_PageShell-AvoXgHto.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_lock-DqkAvhsx.js",
+      "_check-D33LoE7I.js",
+      "_triangle-alert-Vsq-qEcN.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js"
+    ]
+  },
+  "src/routes/_authenticated/simulator.tsx?tsr-split=component": {
+    "file": "assets/simulator-DUp9sMN-.js",
+    "name": "simulator",
+    "src": "src/routes/_authenticated/simulator.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_useLiveQuotes-a6H7Jnr0.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_trending-up-r08gGgu4.js",
+      "_history-6GR7AgXc.js",
+      "_triangle-alert-Vsq-qEcN.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_types-BfPr8xct.js",
+      "_planLimits-DfVfhYvW.js"
+    ]
+  },
+  "src/routes/_authenticated/watchlist.tsx?tsr-split=component": {
+    "file": "assets/watchlist-TJgrp6UO.js",
+    "name": "watchlist",
+    "src": "src/routes/_authenticated/watchlist.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_useQuery-DpcV55YJ.js",
+      "_createSsrRpc-CXvRzAXX.js",
+      "_client-T0sJvQy8.js",
+      "_tickerConfig-7S1tvlm8.js",
+      "_yahooFinance.functions-CNaRUXD5.js",
+      "_Sparkline-B4diw_8e.js",
+      "_GlobalSearch-lo70RBD4.js",
+      "_planLimits-DfVfhYvW.js",
+      "_refresh-cw-BUr9OHaX.js",
+      "_plus-CSvLupSh.js",
+      "_star-DhPIhgY3.js",
+      "_trash-2-B3iTgfN2.js",
+      "_trending-up-r08gGgu4.js",
+      "_briefcase-CdypnbFT.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js",
+      "_types-BfPr8xct.js",
+      "_search-CogVE9sq.js",
+      "_createLucideIcon-DvD_YuaJ.js",
+      "_x-DJQb9mxA.js"
+    ]
+  },
+  "src/routes/index.tsx?tsr-split=component": {
+    "file": "assets/index-vmllHJrv.js",
+    "name": "index",
+    "src": "src/routes/index.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js"
+    ]
+  },
+  "src/routes/login.tsx?tsr-split=component": {
+    "file": "assets/login-7pLbwVHK.js",
+    "name": "login",
+    "src": "src/routes/login.tsx?tsr-split=component",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_router-C3k8-z80.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js",
+      "_aiProvider-Cvi-Tcv4.js"
+    ]
+  },
+  "src/start.ts": {
+    "file": "assets/start-a5im22TM.js",
+    "name": "start",
+    "src": "src/start.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_server-Cgfy5VtR.js",
+      "_worker-entry-CwrhVR88.js",
+      "_client-T0sJvQy8.js",
+      "_index-ChW4vIqc.js"
+    ]
+  },
+  "tanstack-start-manifest:v": {
+    "file": "assets/_tanstack-start-manifest_v-DJ8NvYuW.js",
+    "name": "_tanstack-start-manifest_v",
+    "src": "tanstack-start-manifest:v",
+    "isDynamicEntry": true
+  },
+  "virtual:cloudflare/worker-entry": {
+    "file": "index.js",
+    "name": "index",
+    "src": "virtual:cloudflare/worker-entry",
+    "isEntry": true,
+    "imports": [
+      "_worker-entry-CwrhVR88.js"
+    ]
+  }
+}

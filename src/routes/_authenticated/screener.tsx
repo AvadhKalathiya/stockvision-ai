@@ -36,7 +36,6 @@ function ScreenerPage() {
       };
     })
       .filter((d) => {
-        // Mock logic for screening based on category since we lack full fundamental API data
         if (category === "Growth") return d.pct > 1;
         if (category === "Value") return d.price < 500 && d.pct > 0;
         if (category === "Dividend") return ["ITC.NS", "ONGC.NS", "TCS.NS"].includes(d.ticker);

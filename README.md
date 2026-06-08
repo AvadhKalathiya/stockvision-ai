@@ -1,203 +1,320 @@
-# StockVision AI
+# 🇮🇳 StockVision AI
 
-StockVision AI is a comprehensive, AI-powered investing platform designed for Indian and global equity & crypto markets. It provides real-time market data, portfolio tracking, simulated forecasting models, AI-driven market insights, and interactive charting.
+### The AI-Powered Bloomberg + TradingView for Indian Investors
 
----
+StockVision AI is a modern AI-driven investing platform focused exclusively on the Indian stock market ecosystem.
 
-## Features
-
-### Completed Features
-* **Authentication**: Secure login, signup, and session management powered by Supabase.
-* **Real-time Market Data**: Integration with Yahoo Finance to pull live quotes, historical charting data, and validate tickers.
-* **Portfolio Tracking**: Add holdings, track buy prices, quantities, and monitor portfolio performance.
-* **Watchlist**: Save favorite tickers for quick monitoring.
-* **AI Market Chat**: Interactive AI assistant (Gemini-2.5-flash) focused on equity and crypto markets.
-* **AI News Generation**: Synthesized realistic market headlines and sentiment analysis.
-* **Smart Price Alerts**: Set target prices on tickers and manage active alerts.
-* **Market Screener & Heatmap**: Visual tools for sector analysis and market comparisons.
-* **IPO & Futures Tracking**: Dedicated modules for upcoming listings and futures data.
-* **Trading Simulator**: Practice trading with virtual portfolios.
-
-### Partially Implemented Features
-* **Forecasting Engine**: The UI and routing for SARIMA, Prophet, LSTM, and Ensemble models are fully built. However, the current backend implementation uses simulated mathematical functions (sine/cosine curves and historical volatility) to generate predictions instead of actual Machine Learning inference.
-
-### Planned Features
-* **Real ML Backend Integration**: Replacing the simulated math forecasting service with actual Python-based ML models.
-* **Real-time WebSockets**: Push-based live ticker updates instead of polling.
-* **Brokerage Integration**: Direct trading via API connections to popular brokers.
+Built for retail investors, traders, students, and long-term wealth builders, the platform combines AI-powered portfolio analysis, real-time market intelligence, forecasting tools, stock screening, paper trading, IPO tracking, and interactive market visualization into one unified experience.
 
 ---
 
-## Screens / Modules
+## 🚀 Core Mission
 
-* **Dashboard**: Overview of portfolio, watchlist, and market status.
-* **Portfolio**: Detailed tracking of stock holdings, average costs, and returns.
-* **Watchlist**: Monitored stocks with quick-access to charts and forecasts.
-* **Forecast**: Tool to run predictions on specific tickers using different algorithms.
-* **AI Chat**: Conversational interface for market queries.
-* **News**: AI-generated market headlines and sentiment analysis.
-* **Alerts**: Management of user-defined price triggers.
-* **History**: Log of past forecasts run by the user.
-* **IPO & Futures**: Upcoming listings and derivatives market data.
-* **Screener**: Filter and search for stocks based on criteria.
-* **Compare**: Side-by-side metric comparison of multiple tickers.
-* **Heatmap**: Visual representation of market performance by sector.
-* **Simulator**: Virtual paper-trading environment.
-* **Settings**: User profile management, preferences, and data export.
+Our mission is simple:
+
+**Help Indian investors make smarter decisions using AI.**
+
+Instead of switching between multiple tools for charts, news, portfolio tracking, screeners, IPO analysis, and market research, StockVision AI brings everything into a single platform.
 
 ---
 
-## Architecture
+# ✨ Features
 
-**Frontend:**
-* React 19
-* TypeScript
-* TanStack Router (File-based routing)
-* Vite
-* Tailwind CSS (v4)
-* shadcn/Radix UI for components
+## 📊 AI Portfolio Advisor
 
-**Backend:**
-* Supabase (PostgreSQL, Row Level Security)
-* TanStack Start Server Functions (RPCs)
-* Cloudflare integration (`wrangler.jsonc`) for Edge deployment
+Analyze your portfolio instantly.
 
-**State Management:**
-* Zustand (for auth and simulator state)
-* TanStack Query (React Query) for async data caching
+Features:
 
-**AI Layer:**
-* Lovable AI Gateway (Google `gemini-2.5-flash` model) for conversational AI and news generation.
+* Portfolio Risk Score
+* Portfolio Health Score
+* Diversification Score
+* Sector Allocation Analysis
+* Concentration Risk Detection
+* Overexposure Warnings
+* AI Rebalancing Suggestions
+* Risk vs Reward Analysis
 
----
+Example:
 
-## Project Structure
-
-```text
-/
-├── src/
-│   ├── components/      # Reusable UI elements (AppShell, Sparkline, GlobalSearch)
-│   ├── routes/          # TanStack file-based routes (index, login, _authenticated/*)
-│   ├── hooks/           # Custom React hooks
-│   ├── stores/          # Zustand state stores (authStore, simulatorStore)
-│   ├── lib/             # Core logic, API functions (yahooFinance, forecastService, ai)
-│   └── integrations/    # External service setups (Supabase client)
-├── supabase/
-│   └── migrations/      # Database schema and RLS policies
-└── public/              # Static assets
-```
+"65% of your portfolio is allocated to IT stocks. Consider adding Banking and FMCG exposure for improved diversification."
 
 ---
 
-## Database Documentation
+## 📈 Real-Time Market Dashboard
 
-The application runs on a Supabase PostgreSQL database with strict Row Level Security (RLS) policies.
+Track Indian markets live.
 
-* `profiles`: Stores user settings, subscription plan, and usage limits. Auto-created via database trigger upon signup.
-* `user_roles`: Manages access control (`admin` vs `user`).
-* `portfolio`: User's holdings including ticker, quantity, buy price, and notes.
-* `watchlist`: Saved tickers for quick access.
-* `price_alerts`: Active and inactive price targets per ticker.
-* `forecast_history`: Log of predictions run by the user, storing the model used, recommendation, and predicted change.
+Supported Markets:
 
----
+* NIFTY 50
+* NIFTY NEXT 50
+* BANK NIFTY
+* SENSEX
 
-## API Integrations
+Includes:
 
-* **Yahoo Finance API (yfinance)**: The primary data source for live quotes, historical OHLCV chart data, and ticker validation. Used via direct HTTP requests with spoofed User-Agents to prevent blocking.
-* **Lovable AI Gateway**: Serves as a proxy to Google's Gemini-2.5-flash model. Used to power the `aiChat` and `aiMarketNews` server functions.
-* **Supabase API**: Handles all authentication flows and direct database queries via the JS client.
-
----
-
-## Forecasting Engine
-
-The forecasting module (`src/lib/forecastService.ts`) defines four distinct models:
-1. **SARIMA**
-2. **Prophet**
-3. **LSTM**
-4. **Ensemble**
-
-*Note: As verified in the codebase, these models are currently simulated using deterministic mathematical offsets (`Math.sin`, `Math.cos`, slope calculation, and hardcoded historical volatility) applied to the last closing price. It provides a complete mock data structure (confidence intervals, MAE, RMSE metrics) for the frontend until a true Python/TensorFlow backend is connected.*
+* Top Gainers
+* Top Losers
+* Volume Leaders
+* Trending Stocks
+* Sector Leaders
+* Market Breadth
 
 ---
 
-## Authentication
+## 🔥 Market Heatmap
 
-Authentication is handled securely via **Supabase Auth**.
-* **Flows**: Email/Password login and signup.
-* **Session Management**: JWT tokens handled by `@lovable.dev/cloud-auth-js` and synchronized with a Zustand `authStore`.
-* **Protected Routes**: Middleware (`requireSupabaseAuth`) and TanStack Router's `beforeLoad` functions enforce authentication, redirecting unauthenticated users to `/login`.
+TradingView-style heatmap.
 
----
+Features:
 
-## Installation Guide
+* Sector Visualization
+* Live Price Movement
+* Gainers & Losers
+* Search Stocks
+* Filter by Sector
+* Performance Sorting
 
-### Prerequisites
-* Node.js (v20+)
-* npm or bun
-* A Supabase project
-* Lovable AI Gateway Access (or direct OpenAI/Gemini API key substitution)
+Supported:
 
-### Installation
-1. Clone the repository.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-### Environment Variables
-Create a `.env` file in the root directory. You will need:
-
-```env
-SUPABASE_URL=...
-SUPABASE_PUBLISHABLE_KEY=...
-VITE_SUPABASE_PROJECT_ID=...
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_PUBLISHABLE_KEY=...
-LOVABLE_API_KEY=... # Required for AI Chat & News
-```
-
-### Development Setup
-Start the local Vite development server:
-```bash
-npm run dev
-```
+* NIFTY 50
+* NIFTY NEXT 50
+* BANK NIFTY
+* SENSEX
 
 ---
 
-## Deployment Guide
+## ⚖️ Stock Comparison Center
 
-The project is configured for Edge deployment (Cloudflare Pages/Workers) via `@cloudflare/vite-plugin`.
+Compare stocks side-by-side.
 
-* **Build command**: `npm run build`
-* **Preview command**: `npm run preview`
+Examples:
 
-Ensure that your hosting provider has all environment variables configured. Supabase migrations must be pushed to your production database using the Supabase CLI:
-```bash
-npx supabase db push
-```
+* TCS vs INFY
+* HDFCBANK vs ICICIBANK
+* RELIANCE vs TATAMOTORS
 
----
+Metrics:
 
-## Performance Features
-
-* **Caching**: Deep integration with TanStack Query to cache Yahoo Finance responses and AI generations, minimizing redundant API calls.
-* **Code Splitting**: TanStack Router automatically splits the bundle by route, ensuring users only load the JavaScript necessary for their current page.
-* **Lazy Loading**: Heavy UI components are deferred until needed.
-
----
-
-## Future Roadmap
-
-Based on the current state of the codebase, the immediate priorities are:
-1. **Machine Learning Backend**: Swap the simulated `forecastService.ts` math functions with an external API that runs actual SARIMA, Prophet, and LSTM inference on historical data.
-2. **Real-time WebSockets**: Implement Supabase Realtime or direct exchange WebSockets for live ticker updates on the Dashboard and Portfolio screens.
-3. **Enhanced Screener**: Connect the UI screener to a backend API capable of filtering the entire stock universe by technical indicators.
+* Returns
+* Risk Score
+* Volatility
+* Forecast
+* Market Cap
+* PE Ratio
+* ROE
+* Dividend Yield
 
 ---
 
-## License
+## 🤖 AI Market Assistant
 
-Copyright © 2026 StockVision AI. All rights reserved.
-Educational purposes only. Not investment advice.
+Powered by Google Gemini AI.
+
+Capabilities:
+
+* Stock Analysis
+* Market Explanations
+* Investment Research
+* Financial Concepts
+* Portfolio Guidance
+* Market Sentiment Analysis
+
+---
+
+## 📰 AI Market News
+
+Real-time market intelligence.
+
+Includes:
+
+* Market Headlines
+* Sentiment Analysis
+* Sector Trends
+* AI News Summaries
+* Market Opportunities
+
+---
+
+## 🎯 Smart Price Alerts
+
+Create custom alerts.
+
+Features:
+
+* Price Targets
+* Percentage Alerts
+* Watchlist Alerts
+* Portfolio Alerts
+
+---
+
+## 🔎 AI Stock Screener
+
+Find opportunities faster.
+
+Categories:
+
+* Growth Stocks
+* Value Stocks
+* Dividend Stocks
+* Momentum Stocks
+* Low Risk Stocks
+* Sector Leaders
+
+AI Features:
+
+* Top Bullish Stocks
+* Hidden Gems
+* High Conviction Picks
+* Confidence Scores
+
+---
+
+## 🏦 IPO Intelligence
+
+Track upcoming IPOs.
+
+Features:
+
+* Upcoming IPO Calendar
+* GMP Tracking
+* Subscription Status
+* Listing Gain Analysis
+* IPO Insights
+
+---
+
+## 🏆 Paper Trading Simulator
+
+Practice without risk.
+
+Features:
+
+* Virtual Capital
+* Buy/Sell Stocks
+* Portfolio Tracking
+* Trade History
+* Profit/Loss Analytics
+* Performance Reports
+
+Default Capital:
+
+₹10,00,000
+
+---
+
+## 💡 AI Insights Engine
+
+AI-generated market intelligence.
+
+Provides:
+
+* Bullish Signals
+* Bearish Signals
+* Sector Opportunities
+* Portfolio Warnings
+* Market Trends
+
+---
+
+# 🛠 Technology Stack
+
+Frontend
+
+⚛️ React 19
+📘 TypeScript
+⚡ Vite
+🎨 Tailwind CSS v4
+🧩 Radix UI
+🎬 Framer Motion
+📊 Recharts
+🛣 TanStack Router
+
+Backend
+
+🗄 Supabase
+🔐 Supabase Auth
+⚡ Server Functions
+
+State Management
+
+🐻 Zustand
+🔄 TanStack Query
+
+AI Layer
+
+🤖 Google Gemini 2.5 Flash
+
+Market Data
+
+📈 Yahoo Finance
+🏦 NSE
+📊 BSE
+
+---
+
+# 👤 Demo Account
+
+For testing purposes:
+
+Email:
+[test@gmail.com](mailto:test@gmail.com)
+
+Password:
+Test@1234
+
+Note:
+Demo credentials may be removed in production deployments.
+
+---
+
+# 💳 Subscription Plans
+
+## Free
+
+₹0/month
+
+* 5 Forecasts per day
+* Basic Watchlist
+* SARIMA Model
+* Dashboard Access
+
+## Student
+
+₹199/month
+
+* Unlimited Forecasts
+* AI Portfolio Advisor
+* Price Alerts
+* PDF Export
+* All Forecast Models
+
+## Pro
+
+₹499/month
+
+* Everything in Student
+* Unlimited Alerts
+* AI Screener
+* Advanced Insights
+* Priority Features
+
+---
+
+# 🎯 Vision
+
+StockVision AI aims to become:
+
+"The AI-Powered Bloomberg + TradingView for Indian Investors"
+
+Built in India 🇮🇳
+Made for Indian Investors 🇮🇳
+
+---
+
+© 2026 StockVision AI
+All Rights Reserved.
+Educational Purposes Only.
+Not Financial Advice.

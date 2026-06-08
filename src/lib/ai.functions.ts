@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { aiChatComplete, aiNotConfiguredMessage, type ChatMessage } from "./aiProvider";
+import { fetchMarketNews } from "./newsService";
 
 export type { ChatMessage };
 
@@ -22,20 +23,12 @@ export const aiMarketNews = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { topic?: string; query?: string }) => data)
   .handler(async ({ data }) => {
-    const focus = data.query?.trim() || data.topic?.trim() || "Indian equity markets NSE BSE NIFTY";
-    const prompt = `Generate 8 realistic market news items about: ${focus}.
-Return ONLY valid JSON: {"items":[{"headline":"...","summary":"...","sentiment":"bullish|bearish|neutral","ticker":"TICKER.NS"}]}`;
-
+    const query = data.query?.trim() || data.topic?.trim() || "Indian equity markets";
+    
     try {
-      const raw = await aiChatComplete([{ role: "user", content: prompt }]);
-      const cleaned = raw.replace(/```json|```/g, "").trim();
-      return JSON.parse(cleaned) as {
-        items: { headline: string; summary: string; sentiment: string; ticker: string }[];
-      };
+      const items = await fetchMarketNews(query);
+      return { items };
     } catch (e) {
-      if ((e as Error).message.includes("not configured")) {
-        return { items: [], error: aiNotConfiguredMessage() };
-      }
-      return { items: [] };
+      return { items: [], error: (e as Error).message };
     }
   });
