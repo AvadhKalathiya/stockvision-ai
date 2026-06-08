@@ -157,7 +157,8 @@ function LoginPage() {
           <Mail className="size-12 mx-auto text-primary" />
           <h1 className="font-heading text-2xl font-bold">Check your email</h1>
           <p className="text-muted-foreground text-sm">
-            We sent a confirmation link to <span className="text-foreground font-medium">{email}</span>.<br />
+            We sent a confirmation link to{" "}
+            <span className="text-foreground font-medium">{email}</span>.<br />
             Click the link to activate your account, then sign in.
           </p>
           <button
@@ -170,16 +171,35 @@ function LoginPage() {
             Back to Sign in
           </button>
           <button
+            type="button"
             onClick={async () => {
+              if (!email.trim()) {
+                toast.error("Enter your email address first to resend the confirmation email.");
+                return;
+              }
+              if (!password) {
+                toast.error("Enter your password again to resend the confirmation email.");
+                return;
+              }
+
               setLoading(true);
-              const { error } = await supabase.auth.resend({
-                type: "signup",
+              const { error } = await supabase.auth.signUp({
                 email: email.trim(),
+                password,
                 options: { emailRedirectTo: `${window.location.origin}/dashboard` },
               });
               setLoading(false);
-              if (error) toast.error(getAuthErrorMessage(error));
-              else toast.success("Confirmation email resent.");
+
+              if (error) {
+                const message = getAuthErrorMessage(error).toLowerCase();
+                if (message.includes("already") || message.includes("registered")) {
+                  toast.success("Confirmation email resent.");
+                } else {
+                  toast.error(getAuthErrorMessage(error));
+                }
+              } else {
+                toast.success("Confirmation email resent.");
+              }
             }}
             disabled={loading}
             className="w-full text-sm text-muted-foreground hover:text-foreground transition disabled:opacity-50"
