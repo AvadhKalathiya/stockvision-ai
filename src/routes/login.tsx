@@ -30,16 +30,27 @@ function getAuthErrorMessage(error: unknown): string {
   if (lower.includes("email not confirmed") || lower.includes("email_not_confirmed")) {
     return "Please confirm your email address before signing in. Check your inbox.";
   }
-  if (lower.includes("user already registered") || lower.includes("already registered") || lower.includes("user_already_exists")) {
+  if (
+    lower.includes("user already registered") ||
+    lower.includes("already registered") ||
+    lower.includes("user_already_exists")
+  ) {
     return "An account with this email already exists. Please sign in instead.";
   }
   if (lower.includes("email_address_invalid")) {
     return "Please enter a valid email address.";
   }
-  if (lower.includes("password") && (lower.includes("weak") || lower.includes("short") || lower.includes("characters"))) {
+  if (
+    lower.includes("password") &&
+    (lower.includes("weak") || lower.includes("short") || lower.includes("characters"))
+  ) {
     return "Password must be at least 6 characters long.";
   }
-  if (lower.includes("rate limit") || lower.includes("too many") || lower.includes("over_email_send_rate_limit")) {
+  if (
+    lower.includes("rate limit") ||
+    lower.includes("too many") ||
+    lower.includes("over_email_send_rate_limit")
+  ) {
     return "Too many attempts. Please wait a few minutes and try again.";
   }
   if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed")) {
@@ -150,7 +161,10 @@ function LoginPage() {
             Click the link to activate your account, then sign in.
           </p>
           <button
-            onClick={() => { setConfirmationSent(false); setMode("signin"); }}
+            onClick={() => {
+              setConfirmationSent(false);
+              setMode("signin");
+            }}
             className="w-full px-4 py-2.5 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition"
           >
             Back to Sign in
@@ -281,7 +295,9 @@ function LoginPage() {
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition disabled:opacity-50"
           >
             {loading ? (
-              <><Loader2 className="size-4 animate-spin" /> Processing…</>
+              <>
+                <Loader2 className="size-4 animate-spin" /> Processing…
+              </>
             ) : mode === "signin" ? (
               "Sign in"
             ) : (
@@ -310,12 +326,16 @@ function LoginPage() {
             <User className="size-4" />
             <span className="font-medium">Demo Account</span>
           </div>
-          <p className="text-xs text-muted-foreground mb-3">
-            For testing purposes:
-          </p>
+          <p className="text-xs text-muted-foreground mb-3">For testing purposes:</p>
           <div className="bg-zinc-900/50 rounded-md p-3 text-xs space-y-1 font-mono">
-            <div><span className="text-muted-foreground">Email:</span> <span className="text-emerald-400">test@gmail.com</span></div>
-            <div><span className="text-muted-foreground">Password:</span> <span className="text-emerald-400">Test@1234</span></div>
+            <div>
+              <span className="text-muted-foreground">Email:</span>{" "}
+              <span className="text-emerald-400">test@gmail.com</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Password:</span>{" "}
+              <span className="text-emerald-400">Test@1234</span>
+            </div>
           </div>
           <p className="text-[10px] text-muted-foreground mt-2 text-center">
             Demo credentials may be removed in production
