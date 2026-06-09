@@ -501,8 +501,7 @@ MIT License
 ### Connect
 
 * GitHub: https://github.com/AvadhKalathiya
-* Portfolio: Add Your Portfolio Link
-* LinkedIn: Add Your LinkedIn Link
+* LinkedIn: https://www.linkedin.com/in/avadh-kalathiya-506154276 
 * Email: [avadhkalathiya219@gmail.com](mailto:avadhkalathiya219@gmail.com)
 
 # ❤️ Support
