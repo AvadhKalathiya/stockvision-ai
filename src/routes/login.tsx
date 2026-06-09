@@ -30,27 +30,16 @@ function getAuthErrorMessage(error: unknown): string {
   if (lower.includes("email not confirmed") || lower.includes("email_not_confirmed")) {
     return "Please confirm your email address before signing in. Check your inbox.";
   }
-  if (
-    lower.includes("user already registered") ||
-    lower.includes("already registered") ||
-    lower.includes("user_already_exists")
-  ) {
+  if (lower.includes("user already registered") || lower.includes("already registered") || lower.includes("user_already_exists")) {
     return "An account with this email already exists. Please sign in instead.";
   }
   if (lower.includes("email_address_invalid")) {
     return "Please enter a valid email address.";
   }
-  if (
-    lower.includes("password") &&
-    (lower.includes("weak") || lower.includes("short") || lower.includes("characters"))
-  ) {
+  if (lower.includes("password") && (lower.includes("weak") || lower.includes("short") || lower.includes("characters"))) {
     return "Password must be at least 6 characters long.";
   }
-  if (
-    lower.includes("rate limit") ||
-    lower.includes("too many") ||
-    lower.includes("over_email_send_rate_limit")
-  ) {
+  if (lower.includes("rate limit") || lower.includes("too many") || lower.includes("over_email_send_rate_limit")) {
     return "Too many attempts. Please wait a few minutes and try again.";
   }
   if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed")) {
@@ -63,6 +52,7 @@ function getAuthErrorMessage(error: unknown): string {
     return "Your confirmation link has expired. Please sign up again.";
   }
 
+  // Return the raw message if unrecognised, trimmed
   return msg.length > 120 ? msg.substring(0, 120) + "…" : msg;
 }
 
@@ -92,6 +82,7 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Basic client-side validation
     if (!email.trim()) {
       toast.error("Please enter your email address.");
       return;
@@ -123,15 +114,19 @@ function LoginPage() {
 
         if (error) throw error;
 
+        // Check if user already existed (identities array is empty when user exists)
         if (data.user && data.user.identities && data.user.identities.length === 0) {
           toast.error("An account with this email already exists. Please sign in instead.");
           setMode("signin");
           return;
         }
 
+        // If session is immediately available, email auto-confirm is on
         if (data.session) {
           toast.success("Account created! Welcome to StockVision AI.");
+          // authStore will pick up the session via onAuthStateChange
         } else {
+          // Email confirmation required
           setConfirmationSent(true);
           toast.success("Account created! Check your email for a confirmation link.");
         }
@@ -142,6 +137,7 @@ function LoginPage() {
         });
         if (error) throw error;
         toast.success("Welcome back!");
+        // Navigation handled by the useEffect above
       }
     } catch (err) {
       toast.error(getAuthErrorMessage(err));
@@ -150,15 +146,18 @@ function LoginPage() {
     }
   };
 
+  // ── Confirmation screen ──────────────────────────────────────────────────
+
   if (confirmationSent) {
     return (
       <main className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-md glass-card p-8 text-center space-y-4">
-          <Mail className="size-12 mx-auto text-primary" />
-          <h1 className="font-heading text-2xl font-bold">Check your email</h1>
-          <p className="text-muted-foreground text-sm">
+          <Mail className="size-14 mx-auto text-primary" />
+          <h1 className="font-heading text-3xl font-bold">Check your email</h1>
+          <p className="text-muted-foreground text-base">
             We sent a confirmation link to{" "}
-            <span className="text-foreground font-medium">{email}</span>.<br />
+            <span className="text-foreground font-medium">{email}</span>.
+            <br />
             Click the link to activate your account, then sign in.
           </p>
           <button
@@ -166,43 +165,27 @@ function LoginPage() {
               setConfirmationSent(false);
               setMode("signin");
             }}
-            className="w-full px-4 py-2.5 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition"
+            className="w-full px-4 py-3.5 rounded-md bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition"
           >
             Back to Sign in
           </button>
           <button
-            type="button"
             onClick={async () => {
-              if (!email.trim()) {
-                toast.error("Enter your email address first to resend the confirmation email.");
-                return;
-              }
-              if (!password) {
-                toast.error("Enter your password again to resend the confirmation email.");
-                return;
-              }
-
               setLoading(true);
-              const { error } = await supabase.auth.signUp({
+              const { error } = await supabase.auth.resend({
+                type: "signup",
                 email: email.trim(),
-                password,
                 options: { emailRedirectTo: `${window.location.origin}/dashboard` },
               });
               setLoading(false);
-
               if (error) {
-                const message = getAuthErrorMessage(error).toLowerCase();
-                if (message.includes("already") || message.includes("registered")) {
-                  toast.success("Confirmation email resent.");
-                } else {
-                  toast.error(getAuthErrorMessage(error));
-                }
+                toast.error(getAuthErrorMessage(error));
               } else {
                 toast.success("Confirmation email resent.");
               }
             }}
             disabled={loading}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition disabled:opacity-50"
+            className="w-full text-base text-muted-foreground hover:text-foreground transition disabled:opacity-50"
           >
             {loading ? "Sending…" : "Resend confirmation email"}
           </button>
@@ -211,32 +194,35 @@ function LoginPage() {
     );
   }
 
+  // ── Main login/signup form ───────────────────────────────────────────────
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md glass-card p-8">
         {/* Logo */}
         <Link
           to="/"
-          className="block text-center font-heading text-2xl font-bold tracking-wider text-glow-green mb-6"
+          className="block text-center font-heading text-3xl font-bold tracking-wider text-glow-green mb-6"
         >
           STOCKVISION<span className="text-accent"> AI</span>
         </Link>
 
         {/* Heading */}
-        <h1 className="font-heading text-2xl text-center mb-1">
+        <h1 className="font-heading text-3xl text-center mb-2">
           {mode === "signin" ? "Sign in" : "Create account"}
         </h1>
-        <p className="text-center text-sm text-muted-foreground mb-6">
+        <p className="text-center text-base text-muted-foreground mb-8">
           {mode === "signin"
             ? "Access your forecasts and portfolio."
             : "Start your AI-powered investing journey."}
         </p>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {/* Name field (signup only) */}
           {mode === "signup" && (
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 placeholder="Full name"
@@ -244,13 +230,14 @@ function LoginPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 autoComplete="name"
-                className="w-full pl-9 pr-3 py-2.5 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition"
+                className="w-full pl-10 pr-4 py-3 rounded-md bg-input border border-border text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition"
               />
             </div>
           )}
 
+          {/* Email */}
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none" />
             <input
               type="email"
               placeholder="Email address"
@@ -258,12 +245,13 @@ function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete={mode === "signin" ? "email" : "new-password"}
-              className="w-full pl-9 pr-3 py-2.5 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition"
+              className="w-full pl-10 pr-4 py-3 rounded-md bg-input border border-border text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition"
             />
           </div>
 
+          {/* Password */}
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none" />
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
@@ -272,7 +260,7 @@ function LoginPage() {
               required
               minLength={6}
               autoComplete={mode === "signin" ? "current-password" : "new-password"}
-              className="w-full pl-9 pr-10 py-2.5 rounded-md bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition"
+              className="w-full pl-10 pr-12 py-3 rounded-md bg-input border border-border text-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition"
             />
             <button
               type="button"
@@ -280,10 +268,11 @@ function LoginPage() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
               tabIndex={-1}
             >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
             </button>
           </div>
 
+          {/* Forgot password (sign in only) */}
           {mode === "signin" && (
             <div className="text-right">
               <button
@@ -298,26 +287,28 @@ function LoginPage() {
                     redirectTo: `${window.location.origin}/dashboard`,
                   });
                   setLoading(false);
-                  if (error) toast.error(getAuthErrorMessage(error));
-                  else toast.success("Password reset email sent. Check your inbox.");
+                  if (error) {
+                    toast.error(getAuthErrorMessage(error));
+                  } else {
+                    toast.success("Password reset email sent. Check your inbox.");
+                  }
                 }}
                 disabled={loading}
-                className="text-xs text-muted-foreground hover:text-primary transition disabled:opacity-50"
+                className="text-sm text-muted-foreground hover:text-primary transition disabled:opacity-50"
               >
                 Forgot password?
               </button>
             </div>
           )}
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 transition disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-md bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition disabled:opacity-50"
           >
             {loading ? (
-              <>
-                <Loader2 className="size-4 animate-spin" /> Processing…
-              </>
+              <><Loader2 className="size-5 animate-spin" /> Processing…</>
             ) : mode === "signin" ? (
               "Sign in"
             ) : (
@@ -327,7 +318,7 @@ function LoginPage() {
         </form>
 
         {/* Mode toggle */}
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        <p className="text-center text-base text-muted-foreground mt-8">
           {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => {
@@ -340,27 +331,47 @@ function LoginPage() {
           </button>
         </p>
 
-        {/* === DEMO ACCOUNT SECTION === */}
-        <div className="mt-8 pt-6 border-t border-border">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <User className="size-4" />
-            <span className="font-medium">Demo Account</span>
-          </div>
-          <p className="text-xs text-muted-foreground mb-3">For testing purposes:</p>
-          <div className="bg-zinc-900/50 rounded-md p-3 text-xs space-y-1 font-mono">
-            <div>
-              <span className="text-muted-foreground">Email:</span>{" "}
-              <span className="text-emerald-400">test@gmail.com</span>
+        {/* Demo Account */}
+        {mode === "signin" && (
+          <div className="mt-8 pt-6 border-t border-border">
+            <div className="flex items-center gap-2 mb-3">
+              <User className="size-5 text-muted-foreground" />
+              <p className="text-lg font-medium">Demo Account</p>
             </div>
-            <div>
-              <span className="text-muted-foreground">Password:</span>{" "}
-              <span className="text-emerald-400">Test@1234</span>
+            <p className="text-muted-foreground text-sm mb-3">For testing purposes:</p>
+            <div className="bg-secondary/30 rounded-lg p-4 space-y-2">
+              <p className="text-base">
+                <span className="font-medium">Email:</span>{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail("test@gmail.com");
+                    toast.success("Email copied!");
+                  }}
+                  className="text-primary hover:underline"
+                >
+                  test@gmail.com
+                </button>
+              </p>
+              <p className="text-base">
+                <span className="font-medium">Password:</span>{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPassword("Test@1234");
+                    toast.success("Password copied!");
+                  }}
+                  className="text-primary hover:underline"
+                >
+                  Test@1234
+                </button>
+              </p>
             </div>
+            <p className="text-xs text-muted-foreground/70 mt-3 text-center">
+              Demo credentials may be removed in production
+            </p>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2 text-center">
-            Demo credentials may be removed in production
-          </p>
-        </div>
+        )}
       </div>
     </main>
   );

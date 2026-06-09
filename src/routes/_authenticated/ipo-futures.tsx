@@ -134,8 +134,8 @@ function IpoFuturesPage() {
                 No IPOs found for this market.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="page-table-wrap">
+                <table className="w-full min-w-[700px] text-sm">
                   <thead className="bg-muted/30 text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       <th className="text-left px-4 py-3">Company</th>

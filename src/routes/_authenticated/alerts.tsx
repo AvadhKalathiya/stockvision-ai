@@ -111,14 +111,7 @@ function AlertsPage() {
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (limits.alertsMax === 0) {
-      toast.error("Price alerts require Student plan or higher");
-      return;
-    }
-    if (limits.alertsMax !== Infinity && alerts.length >= limits.alertsMax) {
-      toast.error(`Alert limit (${limits.alertsMax}) reached. Upgrade to Pro for unlimited.`);
-      return;
-    }
+
     const price = Number(target);
     if (!Number.isFinite(price) || price <= 0) {
       toast.error("Enter a valid target");
@@ -181,9 +174,6 @@ function AlertsPage() {
         </>
       }
     >
-      {limits.alertsMax === 0 ? (
-        <PlanGate requiredPlan="student" title="Price Alerts" description="Set target prices and get notified when stocks cross your levels. Available on Student plan and above." />
-      ) : (
       <form onSubmit={add} className="glass-card p-4 sm:p-5 mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <select
           value={ticker}
@@ -219,13 +209,8 @@ function AlertsPage() {
           <Plus className="size-4" /> Add
         </button>
       </form>
-      )}
 
-      {limits.alertsMax > 0 && (
-      <p className="text-xs text-muted-foreground mb-3">
-        {limits.alertsMax === Infinity ? "Unlimited alerts" : `${alerts.length}/${limits.alertsMax} alerts used`}
-      </p>
-      )}
+
 
       <div className="glass-card page-table-wrap">
         <table className="w-full min-w-[640px]">

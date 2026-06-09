@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/stores/authStore";
 import {
   ALL_TICKERS,
   TICKER_CONFIG,
@@ -15,8 +16,6 @@ import { Sparkline } from "@/components/Sparkline";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { Star, Plus, Trash2, Briefcase, TrendingUp, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { getLimits } from "@/lib/planLimits";
-import { useAuthStore } from "@/stores/authStore";
 
 export const Route = createFileRoute("/_authenticated/watchlist")({
   component: WatchlistPage,
@@ -31,8 +30,6 @@ type SortMode = "movers" | "volume" | "high52";
 
 function WatchlistPage() {
   const user = useAuthStore((s) => s.user);
-  const profile = useAuthStore((s) => s.profile);
-  const limits = getLimits(profile?.plan);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState("TCS.NS");
@@ -94,10 +91,6 @@ function WatchlistPage() {
 
   const handleAdd = async () => {
     if (!user) return;
-    if (limits.watchlistMax !== Infinity && items.length >= limits.watchlistMax) {
-      toast.error(`Watchlist limit (${limits.watchlistMax}) reached. Upgrade for more.`);
-      return;
-    }
     if (items.some((i) => i.ticker === selected)) {
       toast.info("Already in watchlist");
       return;
@@ -165,11 +158,11 @@ function WatchlistPage() {
   }, [items, quotesQuery.data, histQuery.data, sortMode]);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 max-w-7xl mx-auto">
       <header className="mb-6 flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-glow-green">Watchlist</h1>
-          <p className="text-muted-foreground mt-1">Live prices, sparklines & 52-week ranges.</p>
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-glow-green">Watchlist</h1>
+          <p className="text-muted-foreground mt-1 text-sm">Live prices, sparklines & 52-week ranges.</p>
         </div>
         <button
           onClick={() => quotesQuery.refetch()}
@@ -216,10 +209,11 @@ function WatchlistPage() {
             <button
               key={s.id}
               onClick={() => setSortMode(s.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${sortMode === s.id
+              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                sortMode === s.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
-                }`}
+              }`}
             >
               {s.label}
             </button>

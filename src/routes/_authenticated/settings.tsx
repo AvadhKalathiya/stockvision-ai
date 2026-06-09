@@ -120,7 +120,7 @@ function SettingsPage() {
   const exportAllData = async () => {
     if (!user) return;
     const limits = PLAN_LIMITS[currentPlan];
-    if (!limits.canExportPDF && !limits.canPremiumExport) {
+    if (false) {
       toast.error("PDF/CSV export requires Student plan or higher");
       return;
     }
@@ -227,66 +227,11 @@ function SettingsPage() {
       <section className="glass-card p-4 sm:p-6 mb-8 flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="font-heading text-lg">Export your data</h2>
-          <p className="text-sm text-muted-foreground">Student+ plans · CSV export of all holdings.</p>
+          <p className="text-sm text-muted-foreground">CSV export of all holdings.</p>
         </div>
         <button onClick={exportAllData} className="px-4 py-2 rounded-md bg-secondary text-foreground font-semibold flex items-center gap-2 text-sm">
           <Download className="size-4" /> Download CSV
         </button>
-      </section>
-
-      <section>
-        <div className="flex items-center gap-2 mb-4">
-          <Crown className="size-5 text-primary" />
-          <h2 className="font-heading text-lg">Subscription Plans</h2>
-          <span className="ml-auto text-xs px-2 py-1 rounded-full bg-primary/15 text-primary font-bold uppercase">
-            Current: {PLAN_LIMITS[currentPlan].name}
-          </span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {PLAN_ORDER.map((planId) => {
-            const p = PLAN_LIMITS[planId];
-            const active = currentPlan === planId;
-            const isEnterprise = planId === "enterprise";
-            return (
-              <div key={planId} className={`glass-card p-5 flex flex-col ${active ? "border-primary/60 ring-1 ring-primary/40" : ""} ${planId === "pro_plus" ? "border-accent/30" : ""}`}>
-                <div className="flex items-baseline justify-between mb-1">
-                  <h3 className="font-heading text-lg font-bold">{p.name}</h3>
-                  <span className="text-xl font-bold text-primary">
-                    {p.price}<span className="text-xs text-muted-foreground font-normal">{p.priceSub}</span>
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">Best for: {p.tagline}</p>
-                <ul className="space-y-1.5 text-xs mb-4 flex-1">
-                  {p.features.slice(0, 8).map((f) => (
-                    <li key={f} className="flex gap-2">
-                      <Check className="size-3.5 text-primary shrink-0 mt-0.5" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                  {p.features.length > 8 && (
-                    <li className="text-muted-foreground pl-5">+{p.features.length - 8} more</li>
-                  )}
-                </ul>
-                <div className="text-[10px] text-muted-foreground mb-3 border-t border-border pt-2">
-                  Chat: {p.chatMessagesPerDay === Infinity ? "∞" : p.chatMessagesPerDay}/day ·
-                  Forecasts: {p.forecastsPerDay === Infinity ? "∞" : p.forecastsPerDay}/day ·
-                  Watchlist: {p.watchlistMax === Infinity ? "∞" : p.watchlistMax} ·
-                  Alerts: {p.alertsMax === Infinity ? "∞" : p.alertsMax}
-                </div>
-                <button
-                  onClick={() => switchPlan(planId)}
-                  disabled={active}
-                  className={`w-full px-4 py-2 rounded-md font-semibold text-sm transition ${
-                    active ? "bg-secondary text-muted-foreground cursor-default" : isEnterprise ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground hover:opacity-90"
-                  }`}
-                >
-                  {active ? "Current plan" : isEnterprise ? "Contact Sales" : `Switch to ${p.name}`}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-        <p className="text-xs text-muted-foreground mt-4 text-center">Demo billing — plans switch instantly without payment in this build.</p>
       </section>
 
       <section className="glass-card p-4 sm:p-6 mt-8 border-destructive/40">

@@ -6,19 +6,19 @@ export interface EnvValidationResult {
 
 const ENV_CONFIG = {
   required: [
-    { key: "SUPABASE_URL", description: "Supabase project URL" },
-    { key: "SUPABASE_PUBLISHABLE_KEY", description: "Supabase publishable key" },
+    { key: "VITE_SUPABASE_URL", description: "Supabase project URL" },
+    { key: "VITE_SUPABASE_PUBLISHABLE_KEY", description: "Supabase publishable key" },
   ],
   optional: [
-    { key: "GEMINI_API_KEY", description: "Google Gemini API key for AI chat" },
-    { key: "GEMINI_MODEL", description: "Gemini model name (default: gemini-2.5-flash)" },
-    { key: "GROQ_API_KEY", description: "Groq API key for AI chat" },
-    { key: "OPENROUTER_API_KEY", description: "OpenRouter API key for AI chat" },
-    { key: "OPENAI_API_KEY", description: "OpenAI API key for AI chat" },
-    { key: "NEWS_API_KEY", description: "NewsAPI key for market news" },
-    { key: "GNEWS_API_KEY", description: "GNews API key for market news" },
-    { key: "FINNHUB_API_KEY", description: "Finnhub API key for market news" },
-    { key: "FIRECRAWL_API_KEY", description: "Firecrawl API key for web scraping" },
+    { key: "VITE_GEMINI_API_KEY", description: "Google Gemini API key for AI chat" },
+    { key: "VITE_GEMINI_MODEL", description: "Gemini model name (default: gemini-2.5-flash)" },
+    { key: "VITE_GROQ_API_KEY", description: "Groq API key for AI chat" },
+    { key: "VITE_OPENROUTER_API_KEY", description: "OpenRouter API key for AI chat" },
+    { key: "VITE_OPENAI_API_KEY", description: "OpenAI API key for AI chat" },
+    { key: "VITE_NEWS_API_KEY", description: "NewsAPI key for market news" },
+    { key: "VITE_GNEWS_API_KEY", description: "GNews API key for market news" },
+    { key: "VITE_FINNHUB_API_KEY", description: "Finnhub API key for market news" },
+    { key: "VITE_FIRECRAWL_API_KEY", description: "Firecrawl API key for web scraping" },
   ],
 };
 
@@ -26,36 +26,41 @@ export function validateEnvironment(): EnvValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
+  // Get the environment variables from Vite's import.meta.env
+  const getEnv = (key: string): string | undefined => {
+    return (import.meta.env as Record<string, string | undefined>)[key];
+  };
+
   for (const config of ENV_CONFIG.required) {
-    if (!process.env[config.key]) {
+    if (!getEnv(config.key)) {
       errors.push(`Missing required environment variable: ${config.key} (${config.description})`);
     }
   }
 
   const aiProviders = [
-    "GEMINI_API_KEY",
-    "GROQ_API_KEY",
-    "OPENROUTER_API_KEY",
-    "OPENAI_API_KEY",
+    "VITE_GEMINI_API_KEY",
+    "VITE_GROQ_API_KEY",
+    "VITE_OPENROUTER_API_KEY",
+    "VITE_OPENAI_API_KEY",
   ];
-  const hasAIProvider = aiProviders.some((key) => !!process.env[key]);
+  const hasAIProvider = aiProviders.some((key) => !!getEnv(key));
   if (!hasAIProvider) {
     warnings.push(
-      "No AI provider API key found. Set at least one of: GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, or OPENAI_API_KEY. AI Chat will not work.",
+      "No AI provider API key found. Set at least one of: VITE_GEMINI_API_KEY, VITE_GROQ_API_KEY, VITE_OPENROUTER_API_KEY, or VITE_OPENAI_API_KEY. AI Chat will not work.",
     );
   }
 
-  const newsProviders = ["NEWS_API_KEY", "GNEWS_API_KEY", "FINNHUB_API_KEY"];
-  const hasNewsProvider = newsProviders.some((key) => !!process.env[key]);
+  const newsProviders = ["VITE_NEWS_API_KEY", "VITE_GNEWS_API_KEY", "VITE_FINNHUB_API_KEY"];
+  const hasNewsProvider = newsProviders.some((key) => !!getEnv(key));
   if (!hasNewsProvider) {
     warnings.push(
-      "No news provider API key found. Set at least one of: NEWS_API_KEY, GNEWS_API_KEY, or FINNHUB_API_KEY. Market News will not work.",
+      "No news provider API key found. Set at least one of: VITE_NEWS_API_KEY, VITE_GNEWS_API_KEY, or VITE_FINNHUB_API_KEY. Market News will not work.",
     );
   }
 
-  if (!process.env.FIRECRAWL_API_KEY) {
+  if (!getEnv("VITE_FIRECRAWL_API_KEY")) {
     warnings.push(
-      "FIRECRAWL_API_KEY not set. Web scraping features may be limited.",
+      "VITE_FIRECRAWL_API_KEY not set. Web scraping features may be limited.",
     );
   }
 

@@ -112,14 +112,14 @@ function EventsPage() {
       </div>
 
       {tab === "Economy" ? (
-        <div className="glass-card overflow-hidden animate-in fade-in">
+        <div className="glass-card page-table-wrap overflow-hidden animate-in fade-in">
           <div className="p-4 border-b border-border bg-secondary/30 flex justify-between items-center">
             <h2 className="font-heading font-bold flex items-center gap-2">
               <Calendar className="size-5 text-primary" /> Key Macro Events
             </h2>
             <div className="text-xs text-muted-foreground">Times in IST</div>
           </div>
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[600px] text-sm">
             <thead className="bg-secondary/20 text-muted-foreground text-left uppercase text-xs">
               <tr>
                 <th className="p-4">Date/Time</th>
@@ -158,13 +158,13 @@ function EventsPage() {
           </table>
         </div>
       ) : (
-        <div className="glass-card overflow-hidden animate-in fade-in">
+        <div className="glass-card page-table-wrap overflow-hidden animate-in fade-in">
           <div className="p-4 border-b border-border bg-secondary/30">
             <h2 className="font-heading font-bold flex items-center gap-2">
               <Briefcase className="size-5 text-accent" /> Upcoming Corporate Actions
             </h2>
           </div>
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[600px] text-sm">
             <thead className="bg-secondary/20 text-muted-foreground text-left uppercase text-xs">
               <tr>
                 <th className="p-4">Ticker</th>

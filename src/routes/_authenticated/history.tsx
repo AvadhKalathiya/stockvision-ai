@@ -30,17 +30,7 @@ function HistoryPage() {
   const profile = useAuthStore((s) => s.profile);
   const limits = getLimits(profile?.plan);
 
-  if (!limits.canForecastHistory) {
-    return (
-      <PageShell title="Forecast History" subtitle="Track past predictions and model accuracy over time.">
-        <PlanGate
-          requiredPlan="pro"
-          title="Historical Forecast Tracking"
-          description="Review past forecasts, accuracy metrics, and export history. Available on Pro plan and above."
-        />
-      </PageShell>
-    );
-  }
+
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -253,8 +243,8 @@ function HistoryPage() {
         </select>
       </div>
 
-      <div className="glass-card overflow-hidden">
-        <table className="w-full">
+      <div className="glass-card page-table-wrap overflow-hidden">
+        <table className="w-full min-w-[700px]">
           <thead className="bg-secondary/50">
             <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
               <th className="px-4 py-3">Date</th>

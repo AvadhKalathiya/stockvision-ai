@@ -3,8 +3,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ALL_TICKERS, TICKER_CONFIG, formatChangePct, formatPrice } from "@/lib/tickerConfig";
-import { getLiveHistory } from "@/lib/yahooFinance.functions";
-import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { getLiveHistory, getLiveQuotes } from "@/lib/yahooFinance.functions";
 import {
   Line,
   XAxis,
@@ -16,24 +15,24 @@ import {
   Legend,
 } from "recharts";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { useAuthStore } from "@/stores/authStore";
-import { getLimits } from "@/lib/planLimits";
-import { PlanGate } from "@/components/PlanGate";
-import { PageShell } from "@/components/PageShell";
 
 export const Route = createFileRoute("/_authenticated/compare")({
   component: ComparePage,
 });
 
 function ComparePage() {
-  const profile = useAuthStore((s) => s.profile);
-  const limits = getLimits(profile?.plan);
   const [stockA, setStockA] = useState<string>("TCS.NS");
   const [stockB, setStockB] = useState<string>("INFY.NS");
   const [range, setRange] = useState<"1mo" | "3mo" | "6mo" | "1y" | "5y">("1y");
 
   const fetchHistory = useServerFn(getLiveHistory);
-  const { quoteMap } = useLiveQuotes();
+  const fetchQuotes = useServerFn(getLiveQuotes);
+
+  const { data: quotesData } = useQuery({
+    queryKey: ["compare-quotes", stockA, stockB],
+    queryFn: () => fetchQuotes({ data: { tickers: [stockA, stockB] } }),
+    refetchInterval: 60_000,
+  });
 
   const { data: historyA, isFetching: fetchA } = useQuery({
     queryKey: ["history", stockA, range],
@@ -62,33 +61,32 @@ function ComparePage() {
 
   const cfgA = TICKER_CONFIG[stockA as keyof typeof TICKER_CONFIG];
   const cfgB = TICKER_CONFIG[stockB as keyof typeof TICKER_CONFIG];
-  const qA = quoteMap.get(stockA);
-  const qB = quoteMap.get(stockB);
+  const qA = quotesData?.find((q) => q.ticker === stockA);
+  const qB = quotesData?.find((q) => q.ticker === stockB);
 
   // Fake AI winner logic based on simple price change
   const winner = (qA?.changePct ?? 0) > (qB?.changePct ?? 0) ? stockA : stockB;
 
-  if (!limits.canCompare) {
-    return (
-      <PageShell title="Compare Stocks" subtitle="Side-by-side performance, risk, and fundamentals.">
-        <PlanGate requiredPlan="student" title="Compare Stocks" description="Compare two stocks side-by-side with charts, metrics, and AI winner analysis. Available on Student plan and above." />
-      </PageShell>
-    );
-  }
-
   return (
-    <PageShell title="Compare Stocks" subtitle="Side-by-side performance, risk, and fundamentals analysis.">
+    <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 max-w-7xl mx-auto">
+      <header className="mb-6">
+        <h1 className="font-heading text-2xl sm:text-3xl font-bold text-glow-green">Stock Comparison</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Side-by-side performance, risk, and fundamentals analysis.
+        </p>
+      </header>
+
       <div className="mb-6">
         <GlobalSearch />
       </div>
 
-      <div className="glass-card p-5 mb-6 flex flex-wrap gap-4 items-center">
-        <div>
+      <div className="glass-card p-4 sm:p-5 mb-6 flex flex-wrap gap-3 sm:gap-4 items-center">
+        <div className="w-full sm:w-auto">
           <label className="text-xs text-muted-foreground uppercase mb-1 block">Stock A</label>
           <select
             value={stockA}
             onChange={(e) => setStockA(e.target.value)}
-            className="px-3 py-2 rounded bg-input border border-border"
+            className="w-full sm:w-auto px-3 py-2 rounded bg-input border border-border text-sm"
           >
             {ALL_TICKERS.map((t) => (
               <option key={t} value={t}>
@@ -98,12 +96,12 @@ function ComparePage() {
           </select>
         </div>
         <div className="text-muted-foreground font-bold italic pt-4">VS</div>
-        <div>
+        <div className="w-full sm:w-auto">
           <label className="text-xs text-muted-foreground uppercase mb-1 block">Stock B</label>
           <select
             value={stockB}
             onChange={(e) => setStockB(e.target.value)}
-            className="px-3 py-2 rounded bg-input border border-border"
+            className="w-full sm:w-auto px-3 py-2 rounded bg-input border border-border text-sm"
           >
             {ALL_TICKERS.map((t) => (
               <option key={t} value={t}>
@@ -236,6 +234,6 @@ function ComparePage() {
           respective sectors. Ensure proper portfolio diversification.
         </p>
       </div>
-    </PageShell>
+    </div>
   );
 }

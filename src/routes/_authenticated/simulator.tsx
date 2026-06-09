@@ -51,13 +51,13 @@ function SimulatorPage() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <header className="mb-6 flex justify-between items-end">
+    <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 max-w-7xl mx-auto">
+      <header className="mb-6 flex justify-between items-start flex-wrap gap-3">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-glow-green">
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-glow-green">
             Paper Trading Simulator
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             Practice Indian market strategies with ₹10,00,000 virtual capital.
           </p>
         </div>
@@ -172,8 +172,8 @@ function SimulatorPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="glass-card p-6">
             <h2 className="font-heading text-lg font-bold mb-4">Virtual Holdings</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+            <div className="page-table-wrap">
+              <table className="w-full min-w-[600px] text-sm">
                 <thead className="bg-secondary/50 text-muted-foreground text-left text-xs uppercase">
                   <tr>
                     <th className="p-3">Ticker</th>
@@ -185,7 +185,7 @@ function SimulatorPage() {
                 </thead>
                 <tbody>
                   {Object.entries(holdings).map(([t, { qty, avgPrice }]) => {
-                    const live = quotesData?.find((q) => q.ticker === t)?.last ?? avgPrice;
+                    const live = quotes.find((q) => q.ticker === t)?.last ?? avgPrice;
                     const pl = (live - avgPrice) * qty;
                     const plPct = ((live - avgPrice) / avgPrice) * 100;
                     return (

@@ -1,32 +1,31 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { ALL_TICKERS, TICKER_CONFIG, formatChangePct, formatPrice, NIFTY50_TICKERS } from "@/lib/tickerConfig";
+import { ALL_TICKERS, TICKER_CONFIG, formatChangePct, formatPrice } from "@/lib/tickerConfig";
 import { Sparkles, TrendingUp, ShieldCheck, Activity, Target, Zap } from "lucide-react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getLiveQuotes } from "@/lib/yahooFinance.functions";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { useLiveQuotes } from "@/hooks/useLiveQuotes";
-import { PageShell } from "@/components/PageShell";
-import { QueryError, QueryLoading } from "@/components/QueryState";
-import { useAuthStore } from "@/stores/authStore";
-import { getLimits } from "@/lib/planLimits";
 
 export const Route = createFileRoute("/_authenticated/screener")({
   component: ScreenerPage,
 });
 
 type Category = "Growth" | "Value" | "Dividend" | "Momentum" | "Low Risk" | "Sector Leaders";
-const BASIC_CATS: Category[] = ["Growth", "Value"];
-const ADVANCED_CATS: Category[] = ["Dividend", "Momentum", "Low Risk", "Sector Leaders"];
 
 function ScreenerPage() {
-  const profile = useAuthStore((s) => s.profile);
-  const limits = getLimits(profile?.plan);
   const [category, setCategory] = useState<Category>("Growth");
-  const { quotes, isLoading, isError, error, refetch } = useLiveQuotes();
+  const fetchQuotes = useServerFn(getLiveQuotes);
+
+  const { data: quotesData } = useQuery({
+    queryKey: ["screener-quotes"],
+    queryFn: () => fetchQuotes({ data: { tickers: [...ALL_TICKERS] } }),
+    refetchInterval: 60_000,
+  });
 
   const screenedStocks = useMemo(() => {
     return ALL_TICKERS.map((t) => {
-      const q = quotes.find((x) => x.ticker === t);
+      const q = quotesData?.find((x) => x.ticker === t);
       return {
         ticker: t,
         name: TICKER_CONFIG[t as keyof typeof TICKER_CONFIG]?.name,
@@ -36,6 +35,7 @@ function ScreenerPage() {
       };
     })
       .filter((d) => {
+        // Mock logic for screening based on category since we lack full fundamental API data
         if (category === "Growth") return d.pct > 1;
         if (category === "Value") return d.price < 500 && d.pct > 0;
         if (category === "Dividend") return ["ITC.NS", "ONGC.NS", "TCS.NS"].includes(d.ticker);
@@ -46,18 +46,21 @@ function ScreenerPage() {
         return true;
       })
       .sort((a, b) => b.pct - a.pct);
-  }, [quotes, category]);
+  }, [quotesData, category]);
 
   return (
-    <PageShell
-      title="AI Stock Screener"
-      subtitle="Discover Indian stocks using live momentum & sector criteria."
-      actions={
-        <div className="flex items-center gap-2 text-primary font-bold bg-primary/10 px-3 py-1.5 rounded-full text-xs sm:text-sm">
-          <Sparkles className="size-4" /> Scanning {NIFTY50_TICKERS.length} NSE stocks
+    <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 max-w-7xl mx-auto">
+      <header className="mb-6 flex justify-between items-start flex-wrap gap-4">
+        <div>
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-glow-green">AI Stock Screener</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Discover Indian stocks using AI-driven criteria.
+          </p>
         </div>
-      }
-    >
+        <div className="flex items-center gap-2 text-primary font-bold bg-primary/10 px-3 py-1.5 rounded-full text-xs sm:text-sm">
+          <Sparkles className="size-4" /> AI Scanning NSE/BSE
+        </div>
+      </header>
 
       <div className="mb-6">
         <GlobalSearch />
@@ -78,36 +81,43 @@ function ScreenerPage() {
           onClick={setCategory}
           desc="Undervalued, Low P/E"
         />
-        {ADVANCED_CATS.map((cat) => (
-          <CatButton
-            key={cat}
-            current={category}
-            target={cat}
-            icon={cat === "Dividend" ? Zap : cat === "Momentum" ? Activity : cat === "Low Risk" ? ShieldCheck : Sparkles}
-            onClick={(c) => {
-              if (!limits.canUseAdvancedScreener && !BASIC_CATS.includes(c)) {
-                toast.error(`${c} screener requires Student plan or higher`);
-                return;
-              }
-              setCategory(c);
-            }}
-            desc={cat === "Dividend" ? "High Yield" : cat === "Momentum" ? "Uptrend" : cat === "Low Risk" ? "Low Vol" : "Sector Top"}
-            locked={!limits.canUseAdvancedScreener}
-          />
-        ))}
+        <CatButton
+          current={category}
+          target="Dividend"
+          icon={Zap}
+          onClick={setCategory}
+          desc="High Yield Returns"
+        />
+        <CatButton
+          current={category}
+          target="Momentum"
+          icon={Activity}
+          onClick={setCategory}
+          desc="Strong Uptrend"
+        />
+        <CatButton
+          current={category}
+          target="Low Risk"
+          icon={ShieldCheck}
+          onClick={setCategory}
+          desc="Stable Volatility"
+        />
+        <CatButton
+          current={category}
+          target="Sector Leaders"
+          icon={Sparkles}
+          onClick={setCategory}
+          desc="Top per sector"
+        />
       </div>
 
-      {isError ? (
-        <QueryError message={(error as Error)?.message} onRetry={() => refetch()} />
-      ) : isLoading ? (
-        <QueryLoading />
-      ) : (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-card page-table-wrap">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 glass-card overflow-hidden">
           <div className="p-4 border-b border-border bg-secondary/30">
-            <h2 className="font-heading font-semibold text-lg">{category} Stocks</h2>
+            <h2 className="font-heading font-semibold text-base sm:text-lg">{category} Stocks</h2>
           </div>
-          <table className="w-full text-sm min-w-[520px]">
+          <div className="page-table-wrap">
+          <table className="w-full text-sm min-w-[480px]">
             <thead className="text-xs uppercase tracking-wider text-muted-foreground bg-secondary/20">
               <tr>
                 <th className="px-4 py-3 text-left">Company</th>
@@ -134,7 +144,7 @@ function ScreenerPage() {
                   <td className="px-4 py-3 text-right">
                     <Link
                       to="/forecast"
-                      search={{ ticker: s.ticker, model: "Ensemble" }}
+                      search={{ ticker: s.ticker }}
                       className="px-3 py-1 rounded bg-accent/15 text-accent text-xs font-semibold hover:bg-accent/25 transition"
                     >
                       Forecast
@@ -151,6 +161,7 @@ function ScreenerPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -186,8 +197,7 @@ function ScreenerPage() {
           </div>
         </div>
       </div>
-      )}
-    </PageShell>
+    </div>
   );
 }
 
@@ -197,20 +207,18 @@ function CatButton({
   icon: Icon,
   onClick,
   desc,
-  locked,
 }: {
   current: string;
   target: Category;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: any;
   onClick: (c: Category) => void;
   desc: string;
-  locked?: boolean;
 }) {
   const active = current === target;
   return (
     <button
       onClick={() => onClick(target)}
-      className={`shrink-0 flex items-center gap-3 p-4 rounded-xl border transition-all ${active ? "bg-primary/10 border-primary text-foreground" : locked ? "bg-card/50 border-border text-muted-foreground/50" : "bg-card border-border text-muted-foreground hover:bg-secondary/50"}`}
+      className={`shrink-0 flex items-center gap-3 p-4 rounded-xl border transition-all ${active ? "bg-primary/10 border-primary text-foreground" : "bg-card border-border text-muted-foreground hover:bg-secondary/50"}`}
     >
       <div
         className={`p-2 rounded-lg ${active ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}

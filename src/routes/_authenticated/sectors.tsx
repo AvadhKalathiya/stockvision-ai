@@ -1,20 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import {
-  ALL_TICKERS,
-  TICKER_CONFIG,
-  formatChangePct,
-  formatPrice,
-  getHeatmapColorClass,
-} from "@/lib/tickerConfig";
-import { useLiveQuotes } from "@/hooks/useLiveQuotes";
-import { PageShell } from "@/components/PageShell";
-import { QueryError, QueryLoading } from "@/components/QueryState";
-import { Briefcase, TrendingUp, TrendingDown, Sparkles, BarChart3, Building2 } from "lucide-react";
-import { useAuthStore } from "@/stores/authStore";
-import { getLimits } from "@/lib/planLimits";
-import { PlanGate } from "@/components/PlanGate";
-import { computeMarketBreadth } from "@/lib/marketOverview";
+import { ALL_TICKERS, TICKER_CONFIG, formatChangePct, formatPrice } from "@/lib/tickerConfig";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getLiveQuotes } from "@/lib/yahooFinance.functions";
+import { Briefcase, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/sectors")({
   component: SectorsPage,
@@ -23,10 +13,14 @@ export const Route = createFileRoute("/_authenticated/sectors")({
 const SECTORS = ["Banking", "IT Services", "FMCG", "Pharma", "Auto", "Energy", "Infrastructure"];
 
 function SectorsPage() {
-  const profile = useAuthStore((s) => s.profile);
-  const limits = getLimits(profile?.plan);
   const [activeSector, setActiveSector] = useState(SECTORS[0]);
-  const { quotes, isLoading, isError, error, refetch } = useLiveQuotes();
+  const fetchQuotes = useServerFn(getLiveQuotes);
+
+  const { data: quotesData } = useQuery({
+    queryKey: ["sectors-quotes"],
+    queryFn: () => fetchQuotes({ data: { tickers: [...ALL_TICKERS] } }),
+    refetchInterval: 60_000,
+  });
 
   const sectorStocks = useMemo(() => {
     return ALL_TICKERS.filter((t) => {
@@ -35,11 +29,11 @@ function SectorsPage() {
     })
       .map((t) => {
         const cfg = TICKER_CONFIG[t as keyof typeof TICKER_CONFIG];
-        const q = quotes.find((x) => x.ticker === t);
+        const q = quotesData?.find((x) => x.ticker === t);
         return { ticker: t, name: cfg?.name, price: q?.last ?? 0, pct: q?.changePct ?? 0 };
       })
       .sort((a, b) => b.pct - a.pct);
-  }, [quotes, activeSector]);
+  }, [quotesData, activeSector]);
 
   const avgChange = sectorStocks.length
     ? sectorStocks.reduce((a, b) => a + b.pct, 0) / sectorStocks.length
@@ -48,25 +42,24 @@ function SectorsPage() {
   const topLoser = sectorStocks[sectorStocks.length - 1];
 
   return (
-    <PageShell
-      title="Sector Analytics"
-      subtitle="Deep dive into Indian market sectors and industry performance."
-    >
-      {isError ? (
-        <QueryError message={(error as Error)?.message} onRetry={() => refetch()} />
-      ) : isLoading ? (
-        <QueryLoading />
-      ) : (
-      <>
+    <div className="px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8 max-w-7xl mx-auto">
+      <header className="mb-6">
+        <h1 className="font-heading text-2xl sm:text-3xl font-bold text-glow-green">Sector Analytics</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Deep dive into Indian market sectors and industry performance.
+        </p>
+      </header>
+
       <div className="flex gap-2 overflow-x-auto pb-4 mb-6 hide-scrollbar">
         {SECTORS.map((s) => (
           <button
             key={s}
             onClick={() => setActiveSector(s)}
-            className={`px-5 py-2.5 rounded-full font-bold text-sm whitespace-nowrap transition-all ${activeSector === s
+            className={`px-5 py-2.5 rounded-full font-bold text-sm whitespace-nowrap transition-all ${
+              activeSector === s
                 ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(16,185,129,0.4)]"
                 : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-              }`}
+            }`}
           >
             {s}
           </button>
@@ -102,22 +95,16 @@ function SectorsPage() {
             {formatChangePct(topLoser?.pct || 0)}
           </div>
         </div>
-        {limits.canAIMarketSummary ? (
-          <div className="glass-card p-6 md:col-span-1 border-t-4 border-t-accent bg-accent/5">
-            <div className="flex gap-2 items-center text-accent font-bold mb-2">
-              <Sparkles className="size-4" /> AI Outlook
-            </div>
-            <div className="text-sm font-semibold">
-              {avgChange > 0
-                ? "Bullish trend supported by strong institutional buying and volume expansion."
-                : "Bearish consolidation phase. Wait for key support levels to bounce."}
-            </div>
+        <div className="glass-card p-6 md:col-span-1 border-t-4 border-t-accent bg-accent/5">
+          <div className="flex gap-2 items-center text-accent font-bold mb-2">
+            <Sparkles className="size-4" /> AI Outlook
           </div>
-        ) : (
-          <div className="glass-card p-4 md:col-span-1 flex items-center">
-            <PlanGate compact requiredPlan="student" title="AI Sector Outlook" />
+          <div className="text-sm font-semibold">
+            {avgChange > 0
+              ? "Bullish trend supported by strong institutional buying and volume expansion."
+              : "Bearish consolidation phase. Wait for key support levels to bounce."}
           </div>
-        )}
+        </div>
       </div>
 
       <div className="glass-card p-6">
@@ -125,10 +112,17 @@ function SectorsPage() {
           {activeSector} Heatmap &amp; Constituents
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {sectorStocks.map((s) => (
+          {sectorStocks.map((s) => {
+            let color = "bg-secondary/50";
+            if (s.pct >= 1) color = "bg-green-600/80 text-white";
+            else if (s.pct > 0) color = "bg-green-500/50 text-white";
+            else if (s.pct <= -1) color = "bg-red-600/80 text-white";
+            else if (s.pct < 0) color = "bg-red-500/50 text-white";
+
+            return (
               <div
                 key={s.ticker}
-                className={`p-4 rounded-lg flex flex-col justify-between h-24 ${getHeatmapColorClass(s.pct)}`}
+                className={`p-4 rounded-lg flex flex-col justify-between h-24 ${color}`}
               >
                 <div className="font-bold">{s.ticker.replace(".NS", "")}</div>
                 <div className="flex justify-between items-end">
@@ -136,7 +130,8 @@ function SectorsPage() {
                   <div className="font-mono-nums font-bold">{formatChangePct(s.pct)}</div>
                 </div>
               </div>
-          ))}
+            );
+          })}
           {sectorStocks.length === 0 && (
             <div className="col-span-full py-8 text-center text-muted-foreground">
               No tickers mapped to this sector in configuration yet.
@@ -144,42 +139,6 @@ function SectorsPage() {
           )}
         </div>
       </div>
-
-      {limits.canAdvancedSector ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-2 font-bold mb-4">
-              <BarChart3 className="size-5 text-primary" /> Market Breadth
-            </div>
-            {(() => {
-              const breadth = computeMarketBreadth(sectorStocks.map((s) => ({ ticker: s.ticker, changePct: s.pct, last: s.price, volume: 0, source: "yahoo" as const })));
-              return (
-                <div className="grid grid-cols-3 gap-3 text-center text-sm">
-                  <div><div className="text-2xl font-bold text-primary">{breadth.advances}</div><div className="text-xs text-muted-foreground">Advances</div></div>
-                  <div><div className="text-2xl font-bold text-destructive">{breadth.declines}</div><div className="text-xs text-muted-foreground">Declines</div></div>
-                  <div><div className="text-2xl font-bold">{breadth.ratio.toFixed(2)}</div><div className="text-xs text-muted-foreground">A/D Ratio</div></div>
-                </div>
-              );
-            })()}
-          </div>
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-2 font-bold mb-4">
-              <Building2 className="size-5 text-accent" /> Institutional Activity
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {avgChange > 0
-                ? "FII/DII net buying observed in sector leaders — momentum likely to persist short-term."
-                : "Institutional profit-booking detected — watch for support zone entries."}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-6">
-          <PlanGate compact requiredPlan="pro_plus" title="Advanced Sector Analytics & Institutional Dashboard" />
-        </div>
-      )}
-      </>
-      )}
-    </PageShell>
+    </div>
   );
 }
